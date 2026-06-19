@@ -2,7 +2,7 @@
   "schema_version": 1,
   "products": {
     "nexguard-connect-macos": {
-      "latest": "0.0.7",
+      "latest": "0.0.8",
       "minimum": "0.0.5",
       "released_at": "2026-06-19",
       "download_url": "https://github.com/0xphuong/nexguard-connect/releases/tag/macos-v0.0.7",
