@@ -9,6 +9,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.9] - 2026-06-19
+
+macOS notifications for background events. The popover-only UI meant
+the user had no idea when the server kicked them out, the tunnel
+self-healed after a WiFi flap, or an admin approved/revoked their
+device — they'd only find out next time they happened to open the
+menu. UNUserNotificationCenter banners close that gap.
+
+### Added
+
+- **`NotificationService.swift`** (`App/State/`) — thin wrapper over
+  `UNUserNotificationCenter`. Idempotent identifiers so a series of
+  WiFi flaps doesn't fill Notification Center with five "Reconnected"
+  banners; a `ForegroundPresenter` delegate forces banners to display
+  even when the popover is open (default UN behavior drops them when
+  the app is "foreground", which is wrong for menu bar apps).
+- **5 background event notifications**, all NOT user-initiated:
+  1. **Session expired** — fires from `forceReSignIn()` (server
+     returned 401 / VPN session guard expired).
+  2. **Auto-reconnect succeeded** — fires from `hardReconnect()` on
+     successful re-up or leftover-tunnel adoption.
+  3. **Auto-reconnect failed** — fires from `hardReconnect()` when
+     the catch path can't find a live tunnel either.
+  4. **Device approved** — fires when `refreshDeviceStatus()` detects
+     `pendingApproval → enrolled`.
+  5. **Device revoked** — fires when `refreshDeviceStatus()` detects
+     any-active-state → `pendingApproval`.
+- **Authorization request on every `bootstrap()`** — idempotent; UN
+  caches the user's decision after the first prompt and silently
+  returns the cached state on subsequent calls.
+
+### Notes
+
+- User-initiated actions (Connect, Disconnect, Sign Out, Switch
+  Organization) are deliberately NOT notified — the user is already
+  looking at the UI and a banner on top of their own click is noise.
+- If the user denies notification permission, `notify(...)` becomes
+  a silent no-op. We don't keep prompting.
+
+---
+
+## [0.0.8] - 2026-06-19
+
+Auto update-check infrastructure. Client now polls the public
+[nexguard-releases](https://github.com/0xphuong/nexguard-releases) repo
+to surface "Update available" / "Update required" prompts when new
+versions ship. Closes the gap between tag-push and user-perceived
+freshness, and gives admins a force-update lever for security fixes
+via the manifest's `minimum` field.
+
+### Added
+
+- **`UpdateChecker.swift`** (`App/API/`) — fetches the public
+  `versions.json` manifest from
+  `raw.githubusercontent.com/0xphuong/nexguard-releases/main/versions.json`
+  on every app launch and every hour thereafter, gated by a 24-hour
+  per-device throttle (UserDefaults `updateChecker.lastCheckedAt`).
+  Throttle is the right default for a static CDN-cached manifest;
+  manual "Check for Updates" bypasses it. Semver comparator handles
+  `X.Y.Z` with non-numeric suffixes (`0.0.8-beta` → `0.0.8`).
+- **`AppState.updateStatus`** published as
+  `.unknown` / `.upToDate` / `.available(version, dl, cl)` /
+  `.required(version, dl, cl)`. `.unknown` is the safe default — a
+  failed check preserves whatever the UI was already showing rather
+  than clearing a real surfaced update.
+- **`UpdateAvailableBanner`** — slim accent-tinted strip above the
+  popover with `What's new`, `Download`, and ✕. Dismissal is recorded
+  per-version in UserDefaults; a newer `latest` re-arms the banner.
+- **`UpdateRequiredView`** — full-screen warning that replaces all
+  other content when the running build is below `minimum`. Cannot be
+  dismissed; user must download a new build to continue.
+- **"Check for Updates" menu item** (Advanced ▸) — force-checks the
+  manifest, bypassing the 24h throttle. Manual click always produces
+  visible feedback:
+  - `.available` already dismissed → clears dismissal, banner returns.
+  - `.upToDate` → toast "You're up to date." (auto-clear).
+  - `.unknown` → toast "Couldn't check for updates. Try again later."
+  - `.required` → full-screen modal handles it.
+
+### Changed
+
+- **`MARKETING_VERSION` bumped 0.1.0 → 0.0.8** in `project.yml` (and
+  derived `project.pbxproj`). The project file had drifted out of
+  sync with the git release tags — the built app reported `0.1.0`
+  while tags shipped `0.0.7`. Going forward, every release commit
+  must bump `MARKETING_VERSION` to match the tag so update checks
+  resolve correctly against the manifest.
+
+### Notes
+
+- A separate repo, `nexguard-releases`, hosts `versions.json` plus
+  mirrored changelogs for both the macOS client and the NexGuard
+  server. It is the source-of-truth this client polls. Release
+  process: tag this repo → bump `versions.json` in `nexguard-releases`
+  → copy the new CHANGELOG entry. See
+  [`nexguard-releases/README.md`](https://github.com/0xphuong/nexguard-releases#release-process)
+  for the canonical workflow.
+- Sparkle integration (in-app download + delta updates) remains
+  blocked on paid Apple Developer Program; for now `download_url`
+  opens the GitHub Releases page in the user's browser.
+
+---
+
 ## [0.0.7] - 2026-06-18
 
 Menu layout cleanup + diagnostics. UX-only release; no behavior changes
