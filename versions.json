@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "products": {
+    "nexguard-connect-macos": {
+      "latest": "0.0.7",
+      "minimum": "0.0.5",
+      "released_at": "2026-06-19",
+      "download_url": "https://github.com/0xphuong/nexguard-connect/releases/tag/macos-v0.0.7",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#007---2026-06-18"
+    },
+    "nexguard-server": {
+      "latest": "2.1.0",
+      "minimum": "2.0.0",
+      "released_at": "2026-06-15",
+      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v2.1.0",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md"
+    }
+  }
+}
