@@ -18,7 +18,7 @@ prompts.
 | Product | Latest | Minimum | Source repo |
 |---|---|---|---|
 | NexGuard Connect (macOS) | `0.0.9` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
-| NexGuard Server | `2.1.1` | `2.0.0` | [nexguard](https://github.com/0xphuong/nexguard) |
+| NexGuard Server | `2.2.0` | `2.0.0` | [nexguard](https://github.com/0xphuong/nexguard) |
 
 ## How the client uses this
 
