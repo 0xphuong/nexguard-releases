@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.7] - 2026-07-03
+
+Add Organization + Remove Organization polish + hide the portal URL
+from the tray UI.
+
+### Added
+
+- Optional **Label** field on Add Organization (macOS parity). When
+  set, the label replaces the URL in the tray header and the sign-in
+  screen so the portal address never appears on-screen.
+- **Remove current organization** action in the ⋯ menu (destructive
+  red foreground). Revokes tokens, drops the server from the
+  registry, then switches to the next saved org or Onboarding.
+- `windows/CLAUDE.md` — dev working notes (test-box, release
+  pipeline, gotchas) mirrored in the source repo.
+
+### Changed
+
+- Tray header subtitle now shows the **label only** — empty label
+  collapses the whole line instead of falling back to the URL host.
+- Sign-in screen's "to <server>" subtitle hides similarly when no
+  label is set.
+
+---
+
 ## [0.1.6] - 2026-07-03
 
 First public release of the Windows client. Feature parity with
