@@ -11,8 +11,8 @@
     "nexguard-connect-windows": {
       "latest": "0.1.1",
       "minimum": "0.1.0",
-      "released_at": "2026-07-02",
-      "download_url": "https://github.com/0xphuong/nexguard-connect/releases/download/windows-v0.1.1/NexGuardConnect.msi",
+      "released_at": "2026-07-03",
+      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuardConnect-0.1.1.msi",
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-windows/CHANGELOG.md#011---2026-07-02"
     },
     "nexguard-server": {
