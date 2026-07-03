@@ -8,6 +8,13 @@
       "download_url": "https://github.com/0xphuong/nexguard-connect/releases/tag/macos-v0.0.9",
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#009---2026-06-19"
     },
+    "nexguard-connect-windows": {
+      "latest": "0.1.1",
+      "minimum": "0.1.0",
+      "released_at": "2026-07-02",
+      "download_url": "https://github.com/0xphuong/nexguard-connect/releases/download/windows-v0.1.1/NexGuardConnect.msi",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-windows/CHANGELOG.md#011---2026-07-02"
+    },
     "nexguard-server": {
       "latest": "2.2.0",
       "minimum": "2.0.0",

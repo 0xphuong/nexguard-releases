@@ -2,8 +2,8 @@
 
 Public manifest + changelogs for the NexGuard product family. The
 [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) macOS
-client polls this repo to surface "Update available" / "Update required"
-prompts.
+and Windows clients poll this repo to surface "Update available" /
+"Update required" prompts.
 
 ## What's here
 
@@ -11,6 +11,7 @@ prompts.
 |---|---|
 | [`versions.json`](versions.json) | Machine-readable: latest + minimum version per product, download links, changelog deep-links. The client fetches this file. |
 | [`connect-macos/CHANGELOG.md`](connect-macos/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) macOS client changelog. |
+| [`connect-windows/CHANGELOG.md`](connect-windows/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Windows client changelog. |
 | [`server/CHANGELOG.md`](server/CHANGELOG.md) | Mirror of the [NexGuard server](https://github.com/0xphuong/nexguard) changelog. |
 
 ## Products
@@ -18,6 +19,7 @@ prompts.
 | Product | Latest | Minimum | Source repo |
 |---|---|---|---|
 | NexGuard Connect (macOS) | `0.0.9` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
+| NexGuard Connect (Windows) | `0.1.1` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Server | `2.2.0` | `2.0.0` | [nexguard](https://github.com/0xphuong/nexguard) |
 
 ## How the client uses this
@@ -55,9 +57,10 @@ It then compares the running app version against `products.nexguard-connect-maco
 
 Product ids in use:
 - `nexguard-connect-macos`
+- `nexguard-connect-windows`
 - `nexguard-server`
 
-Future: `nexguard-connect-ios`, `nexguard-connect-windows`, etc.
+Future: `nexguard-connect-ios`, `nexguard-connect-linux`, etc.
 
 ## Release process
 
