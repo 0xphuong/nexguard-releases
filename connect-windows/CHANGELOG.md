@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.4] - 2026-07-03
+
+Auto-restart after in-app update.
+
+### Added
+
+- **Auto-restart helper** — after the user clicks Update and the MSI
+  finishes installing, the freshly-installed exe launches
+  automatically. Chrome/Slack/Discord parity: no more manual Start-
+  menu round trip. Implementation: the old exe writes a tiny
+  PowerShell script to `%TEMP%`, spawns it detached at normal
+  integrity right before `Shutdown()`, and the helper polls until
+  both the old process AND msiexec are gone before launching the
+  new install. Self-deletes when done.
+
+### Changed
+
+- **Launching-state copy** in the update modal now tells the user
+  the app will "close and reopen automatically when the new version
+  is ready" -- previously said "will close in a moment" which sent
+  the wrong expectation.
+
+---
+
 ## [0.1.3] - 2026-07-03
 
 Brand refresh + polished upgrade flow.

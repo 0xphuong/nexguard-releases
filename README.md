@@ -19,7 +19,7 @@ and Windows clients poll this repo to surface "Update available" /
 | Product | Latest | Minimum | Source repo |
 |---|---|---|---|
 | NexGuard Connect (macOS) | `0.0.9` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
-| NexGuard Connect (Windows) | `0.1.3` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
+| NexGuard Connect (Windows) | `0.1.4` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Server | `2.2.0` | `2.0.0` | [nexguard](https://github.com/0xphuong/nexguard) |
 
 ## How the client uses this
