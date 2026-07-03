@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.11] - 2026-07-03
+
+Menu bar icon refresh + brand parity with the Windows client.
+
+### Changed
+
+- **Menu bar icon** — replaced the SF Symbol `shield` /
+  `shield.lefthalf.filled` template with the full-color brand
+  shield PNG plus a small phase-color dot in the bottom-right
+  corner (Docker / Cloudflare WARP convention). Both platforms
+  now read as the same product at a glance.
+- **Phase color mapping** — connecting / reconnecting shifted from
+  orange to accent blue (`#4F8DFD`) so the palette matches the
+  Windows `TrayIconFactory` exactly.
+
+### Added
+
+- New `MenuBarShield.imageset` in `Assets.xcassets/` (16 / 32 / 64
+  resolutions sourced from the same AppIcon PNGs).
+- `macos/CLAUDE.md` — dev working notes auto-loaded by Claude Code
+  (parity with the Windows client's `CLAUDE.md`).
+
+### Fixed
+
+- `scripts/build-dmg.sh` now always runs `xcodegen generate` at
+  Step 1 (was: only if `.xcodeproj` was missing). A
+  `MARKETING_VERSION` bump in `project.yml` used to silently NOT
+  propagate to the app bundle while the DMG filename picked up the
+  new number from `$VERSION`.
+- Step 7 cleanup — `lsregister -u`s + removes the staging + Release
+  `.app` copies so Spotlight no longer surfaces 3 entries for
+  "NexGuard Connect" after each build.
+
+---
+
 ## [0.0.9] - 2026-06-19
 
 macOS notifications for background events. The popover-only UI meant
