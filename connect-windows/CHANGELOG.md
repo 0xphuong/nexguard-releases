@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.6] - 2026-07-03
+
+First public release of the Windows client. Feature parity with
+macOS client v0.0.10 plus Windows-specific hardening: in-app OAuth
+via `WebView2` (no leftover browser tabs), MSI installer with the
+WebView2 Runtime bootstrapper embedded (so Windows Server / older
+Windows 10 hosts don't need to install runtime dependencies by
+hand), a full auto-update pipeline with progress modal + auto-
+restart, and a brand refresh (shield icon everywhere, phase-color
+state dot in the tray, Segoe Fluent iconography).
+
+For the full source-side changelog see the [nexguard-connect
+Windows changelog](https://github.com/0xphuong/nexguard-connect/blob/main/windows/CHANGELOG.md#016---2026-07-03).
+
+### Server pairing
+
+Requires NexGuard server v2.1.0+ (needs loopback `redirect_uri`
+support in `/auth/native/begin`).
+
+---
+
 ## [0.1.5] - 2026-07-03
 
 Fix: auto-restart after update actually restarts.
