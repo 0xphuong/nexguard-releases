@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.5] - 2026-07-03
+
+Fix: auto-restart after update actually restarts.
+
+### Fixed
+
+- **Auto-restart helper hung until timeout**. The 0.1.4 helper polled
+  for any `msiexec.exe` process to exit before launching the new
+  build, but Windows always keeps a persistent `msiexec.exe` Windows
+  Installer service running -- so the poll never emptied. The helper
+  now watches the *specific PID* of the elevated msiexec we spawned,
+  which exits cleanly once the package finishes installing.
+- Helper falls back to a fixed 45 s wait if the msiexec PID couldn't
+  be captured (rare).
+- Helper writes a small progress log to `%TEMP%\nexguard-restart.log`
+  so future update-flow issues are diagnosable.
+
+---
+
 ## [0.1.4] - 2026-07-03
 
 Auto-restart after in-app update.
