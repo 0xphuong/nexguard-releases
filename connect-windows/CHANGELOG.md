@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - 2026-07-03
+
+Brand refresh + polished upgrade flow.
+
+### Added
+
+- **Full-brand app icon** (multi-res `.ico` bundling 16/24/32/48/64/128/256
+  from the same shield mark macOS ships) embedded into the .exe and
+  the MSI's Add/Remove Programs entry.
+- **Branded tray icon** — the shield replaces the placeholder disc,
+  with a small phase-color dot in the bottom-right corner (Docker /
+  Cloudflare WARP convention) so the tray still telegraphs Connected
+  / Reconnecting / Revoked / Idle at a glance.
+- **State-driven update modal** — click Update in the tray chip and
+  the modal opens straight into the Downloading state with a live
+  progress bar; no intermediate "Details / Confirm" screen. Panels
+  swap through Downloading → Preparing → Launching → (shutdown) or
+  Failed with a Try again path.
+- **Force update check on startup** — every launch fetches the
+  latest manifest even inside the 24 h throttle window, so a user
+  who re-opens the app sees updates published since the last run.
+- **Dismiss X on the update chip** — session-scoped hide for the
+  advertised version. Reappears when the manifest advances to a
+  newer version or the user manually re-checks.
+
+### Changed
+
+- **About window** trimmed to macOS `orderFrontStandardAboutPanel`
+  parity: icon, product name, version, copyright. No more Server /
+  User rows (that data belongs in Copy Diagnostic Log).
+- **In-app logo** replaces the "NG" text monogram in the tray popup
+  header, About window, and WebView2 loading overlay.
+- **Friendly upgrade errors** — 403 / 404 / 5xx / timeout / UAC deny
+  each map to a distinct human-readable message inside the modal
+  (was: raw HTTP status).
+
+### Fixed
+
+- Clicking Install / Update no longer closed the modal and hid the
+  tray, leaving the user unable to see download progress or a 404
+  error. The modal now stays open for the full pipeline.
+
+---
+
 ## [0.1.1] - 2026-07-02
 
 First auto-update path exercised end-to-end. The v0.1.0 client would
