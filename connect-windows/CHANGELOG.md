@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-07-04
+
+Tray menu reorg -- Advanced submenu (parity with macOS).
+
+### Changed
+
+- Kebab menu (⋯) gets an **Advanced** submenu containing `Remove
+  current organization` (red / destructive, only when a server is
+  bound), `Check for updates`, and `Copy diagnostic log`. Top
+  level trims down to daily-driver actions: Organizations
+  switcher, Add organization, Refresh status, Launch at login,
+  Sign out, About, Quit. `About NexGuard Connect` stays at the
+  top level -- users reflexively look for it there.
+
+---
+
 ## [0.2.0] - 2026-07-03
 
 Client identity telemetry -- every request to the NexGuard server
