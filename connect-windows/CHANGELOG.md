@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.8] - 2026-07-03
+## [0.2.0] - 2026-07-03
 
 Client identity telemetry -- every request to the NexGuard server
 now carries `X-NexGuard-Client-Platform: windows` +
