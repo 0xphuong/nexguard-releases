@@ -16,11 +16,11 @@
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-windows/CHANGELOG.md#018---2026-07-03"
     },
     "nexguard-server": {
-      "latest": "3.0.10",
+      "latest": "3.1.0",
       "minimum": "3.0.0",
       "released_at": "2026-07-03",
-      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v3.0.10",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#3010---2026-07-03"
+      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v3.1.0",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#310---2026-07-03"
     }
   }
 }
