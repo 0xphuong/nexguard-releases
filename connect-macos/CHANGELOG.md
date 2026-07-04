@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-07-04
+
+In-app auto-update. The `Update available` banner + `Update
+required` full-screen view now install the new release directly
+from the app: download the DMG, mount it, swap
+`/Applications/NexGuardConnect.app`, and relaunch the fresh build
+automatically. No more Finder round-trip.
+
+Parity with the Windows client's install pipeline
+(`windows-v0.1.6+`); both platforms drive the same
+Downloading → Preparing → Launching → (relaunch) state machine
+with a matching non-dismissable sheet.
+
+### Added
+
+- **`App/State/UpdateInstallState.swift`** — install-pipeline state
+  enum (`idle`, `downloading`, `preparing`, `launching`,
+  `failed(String)`). Mirrors the Windows enum so both platforms
+  drive the same UX.
+- **`App/Views/UpdateWindow.swift`** — state-driven sheet with
+  Downloading (determinate progress bar bound to
+  `updateDownloadPercent`), Preparing, Launching, and Failed
+  panels. Non-dismissable while in flight so a stray click can't
+  orphan the download.
+- **`AppState.installUpdate()`** — end-to-end pipeline:
+  URLSession byte-stream download (coalesced % updates), DMG
+  mount via `hdiutil`, restart helper spawn, then hard exit so
+  the helper `ditto`-swaps `/Applications/NexGuardConnect.app`
+  and relaunches the new build. Detached bash helper watches the
+  caller PID (up to 5 min) before it fires.
+- Failure path: HTTP + `NSURLError` mapped to plain-English text
+  in the Failed panel with `Close` + `Try again` buttons.
+
+### Changed
+
+- **`UpdateAvailableBanner.swift`** — Download button relabeled to
+  "Update" and now calls `AppState.installUpdate()` instead of
+  opening the download URL in a browser.
+- **`UpdateRequiredView.swift`** — same wiring for the "Update Now"
+  button on the mandatory update screen.
+- **`ContentView.swift`** — presents `UpdateWindow` as a sheet with
+  `.interactiveDismissDisabled` bound to the pipeline's
+  in-flight state.
+
+Pair with Windows client `windows-v0.1.6+` for feature parity.
+
+---
+
 ## [0.1.0] - 2026-07-04
 
 Client identity telemetry -- every request to the NexGuard server
