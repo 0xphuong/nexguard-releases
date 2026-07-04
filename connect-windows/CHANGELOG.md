@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2026-07-04
+
+Bug fix: tray popup footer version string is now dynamic.
+
+The version text in the tray popup's bottom row was a hardcoded
+XAML literal (`Text="v0.2.1"`) that never updated. Users who
+upgraded would see the old version in the footer even though the
+running app was on the new build. Pre-existing bug -- surfaced
+during the 0.3.0 upgrade smoke test.
+
+### Fixed
+
+- **`Views/TrayPopupWindow.xaml`** — replaced the hardcoded
+  literal with a named `VersionText` TextBlock.
+- **`Views/TrayPopupWindow.xaml.cs`** — populate `VersionText`
+  from `Assembly.GetEntryAssembly().GetName().Version` in the
+  ctor, same pattern already used by `AboutWindow`.
+
+---
+
 ## [0.3.0] - 2026-07-04
 
 Verify update downloads with SHA-256. Manifest now carries a
