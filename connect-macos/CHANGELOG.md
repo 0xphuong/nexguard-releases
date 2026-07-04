@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0] - 2026-07-04
+
+Client identity telemetry -- every request to the NexGuard server
+now carries `X-NexGuard-Client-Platform: macos` +
+`X-NexGuard-Client-Version: 0.1.0`. Server records those into the
+device row (server >= v3.1.0) so admins see which build each device
+is running. Passive telemetry only; no enforcement.
+
+Requires server v3.1.0+ for the new columns; older servers ignore
+the headers and everything else keeps working (backwards-compat).
+
+### Added
+
+- New `NexGuardClient` enum (in `App/API/NexGuardClientHeaders.swift`)
+  that exposes the platform id + `Bundle.main` marketing version,
+  and a `URLRequest.addNexGuardClientHeaders()` extension that
+  stamps both onto any outgoing request.
+- `NexGuardAPI` calls it from every request builder
+  (`getAuthorized` / `postAuthorized` / `deleteAuthorized`); the
+  `OAuthClient` calls it from `exchangeCode` / `revoke` / `refresh`.
+  Update-manifest fetches to raw.githubusercontent.com stay header-
+  less by design.
+- Falls back to the literal `"unknown"` if `Bundle.main` can't read
+  its own version; the server treats that string as null in the DB
+  column so no misleading value ends up in the fleet distribution.
+
+Pair with Windows client `windows-v0.2.0` (both platforms now report
+the same identifier pair to the server).
+
+---
+
 ## [0.0.11] - 2026-07-03
 
 Menu bar icon refresh + brand parity with the Windows client.
