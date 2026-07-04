@@ -14,7 +14,7 @@
       "minimum": "0.1.0",
       "released_at": "2026-07-04",
       "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuardConnect-0.3.1.msi",
-      "sha256": "1e85ef5a226439aeb7d8da70b8ad6c3bd928514b2bb02e593ace5f7b4a181f301",
+      "sha256": "1e85ef5a226439aeb7d8da70b8ad6c3bd928514b2bb02e593ace5f7b4a181f30",
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-windows/CHANGELOG.md#031---2026-07-04"
     },
     "nexguard-server": {
