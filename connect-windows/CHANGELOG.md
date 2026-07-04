@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.8] - 2026-07-03
+
+Client identity telemetry -- every request to the NexGuard server
+now carries `X-NexGuard-Client-Platform: windows` +
+`X-NexGuard-Client-Version: 0.1.8`. Server stamps those into the
+device row so admins can see which build each device is running
+(passive; no enforcement).
+
+### Added
+
+- Client identifier headers on `HttpClient` factory defaults for
+  the `"oauth"` + `"api"` named clients. The `"update"` client (hits
+  GitHub raw for the manifest) intentionally stays header-less.
+
+---
+
 ## [0.1.7] - 2026-07-03
 
 Add Organization + Remove Organization polish + hide the portal URL
