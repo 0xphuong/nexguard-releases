@@ -9,6 +9,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.10] - 2026-07-03
+
+Two feature adds serving the native clients. No breaking API
+changes; older Windows / macOS clients continue to work unchanged.
+
+### Added
+
+- **Client identity telemetry on `devices`.** New nullable columns
+  `client_platform`, `client_version`, `client_last_seen_at` on the
+  `devices` table. Populated from the `X-NexGuard-Client-Platform`
+  + `X-NexGuard-Client-Version` headers native clients now send on
+  every `enroll` / `me_config` request. Admin device list gets a
+  new **Client** column; device detail page gets a new **Client**
+  section (Platform / Version / Last Reported). Passive telemetry
+  only -- no enforcement.
+- **RFC 8252 §7.3 loopback redirect_uri support** on
+  `POST /auth/native/begin`. Accepts
+  `http://127.0.0.1:*/callback`, `http://localhost:*/callback`,
+  and `http://[::1]:*/callback` in addition to the custom
+  `nexguard-connect://callback` scheme macOS uses. Unblocks
+  Windows WebView2 OAuth without any custom URL scheme
+  registration. External `http://` URLs are still rejected as a
+  CSRF guard.
+
+### Client pairing
+
+  * Windows: 0.1.8+ (sends the identity headers, uses loopback OAuth)
+  * macOS: 0.0.12+ (sends the identity headers)
+
+---
+
+## [3.0.0 - 3.0.9]
+
+Multiple releases between 2.2.0 and 3.0.10 not mirrored here (portal
+UX overhauls, dashboard refinements, WebSocket-based device status,
+L7 proxy activation, mTLS internal CA, admin filter bars, etc.). See
+the source-repo CHANGELOG in
+[`0xphuong/nexguard`](https://github.com/0xphuong/nexguard/blob/main/CHANGELOG.md)
+for the per-release breakdown.
+
+---
+
 ## [2.2.0] - 2026-06-21
 
 L7 ZTNA Phase 1 — admin data + UI surface for the upcoming layer-7
