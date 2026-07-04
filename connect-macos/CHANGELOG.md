@@ -9,6 +9,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-07-04
+
+Verify update downloads with SHA-256. Manifest now carries a
+`sha256` field alongside each product entry; the in-app installer
+(`AppState.installUpdate`) hashes the downloaded DMG in 1 MiB
+chunks with CryptoKit and refuses to mount if it doesn't match.
+
+Two failure surfaces added to the Failed panel:
+
+- **Missing checksum** — manifest doesn't publish `sha256` for
+  this product. Strict mode: refuse (no fallback). Message:
+  *"This update can't be verified right now. Please try again
+  later."*
+- **Hash mismatch** — file downloaded but hash differs. Refuse
+  before mounting so a hostile DMG can't even be opened by
+  Finder. Message: *"The downloaded update doesn't match the
+  expected checksum. This could mean the file was corrupted in
+  transit, or the update source has been tampered with. Try
+  again in a few minutes."*
+
+Threat model this closes: an attacker who compromises the S3
+bucket alone can no longer push a malicious DMG -- they'd also
+need to compromise the GitHub-hosted manifest to publish a
+matching hash. Manifest and artifact are on separate channels
+with separate auth boundaries by design.
+
+### Added
+
+- **`App/API/UpdateChecker.swift`** — `Product.sha256` (optional
+  in the schema); `UpdateStatus.available/.required` carry the
+  hash through to callers.
+- **`AppState.computeSHA256(fileURL:)`** — streaming hasher, 1 MiB
+  chunks so a large DMG doesn't spike memory.
+- **`scripts/build-dmg.sh`** — emits the SHA-256 of the built DMG
+  as the final line for direct paste into `versions.json`.
+
+### Changed
+
+- **`AppState.installUpdate()`** — after `streamDownload`, verify
+  the hash before mounting. Both missing-hash and mismatch paths
+  route to the Failed panel with distinct messages.
+- **`Views/ContentView.swift`** — install UI switched from
+  `.sheet` to `.overlay`. The `.sheet` presentation misbehaves
+  inside a MenuBarExtra popover (no NSWindow context, button
+  clicks occasionally fell through and required a second tap to
+  dismiss). Overlay lives inside the popover's layout tree and
+  responds to state instantly.
+
+Windows client parity for this hash-verify step is tracked
+separately -- Windows still uses the pre-verify pipeline.
+
+---
+
 ## [0.2.0] - 2026-07-04
 
 In-app auto-update. The `Update available` banner + `Update
