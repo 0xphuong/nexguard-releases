@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-07-04
+
+Verify update downloads with SHA-256. Manifest now carries a
+`sha256` field alongside each product entry; the in-app installer
+hashes the downloaded MSI (streaming, via
+`System.Security.Cryptography.SHA256`) and refuses to run msiexec
+if it doesn't match. Feature parity with macOS client v0.3.0.
+
+Two failure surfaces added to the Failed panel:
+
+- **Missing checksum** — manifest doesn't publish `sha256` for
+  the Windows product. Strict: refuse (no fallback).
+- **Hash mismatch** — file downloaded but hash differs. Refuse
+  BEFORE stopping the tunnel or elevating msiexec.
+
+Threat model this closes: an attacker who compromises the S3
+bucket alone can no longer push a malicious MSI -- they'd also
+need to compromise the GitHub-hosted manifest to publish a
+matching hash. Separate channels, separate auth boundaries.
+
+### Added
+
+- **`App/Api/UpdateChecker.cs`** — `Product.Sha256` +
+  `UpdateStatus.Sha256`.
+- **`AppState._updateSha256`** — observable property, set from
+  the manifest on every check.
+- **`scripts/build-installer.ps1`** — prints the built MSI's
+  SHA-256 for direct paste into `versions.json`.
+
+### Changed
+
+- **`AppState.InstallUpdateAsync`** — strict-mode preflight +
+  post-download hash check before tunnel stop / msiexec launch.
+
+---
+
 ## [0.2.1] - 2026-07-04
 
 Tray menu reorg -- Advanced submenu (parity with macOS).

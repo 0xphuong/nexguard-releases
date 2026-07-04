@@ -19,7 +19,7 @@ and Windows clients poll this repo to surface "Update available" /
 | Product | Latest | Minimum | Source repo |
 |---|---|---|---|
 | NexGuard Connect (macOS) | `0.3.0` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
-| NexGuard Connect (Windows) | `0.2.1` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
+| NexGuard Connect (Windows) | `0.3.0` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Server | `3.1.0` | `3.0.0` | [nexguard](https://github.com/0xphuong/nexguard) |
 
 ## How the client uses this
@@ -51,10 +51,13 @@ It then compares the running app version against `products.nexguard-connect-maco
       "download_url":  "https://...",
       "sha256":        "hex...",    // hex SHA-256 of the artifact at download_url
                                     //   optional in the schema, but the macOS
-                                    //   client (>= 0.3.0) refuses to install
-                                    //   any update whose entry is missing this
-                                    //   field or whose hash doesn't match.
+                                    //   client (>= 0.3.0) and the Windows
+                                    //   client (>= 0.3.0) both refuse to
+                                    //   install any update whose entry is
+                                    //   missing this field or whose hash
+                                    //   doesn't match.
                                     //   Emit with:  shasum -a 256 <artifact>
+                                    //   (or Get-FileHash -Algorithm SHA256)
       "changelog_url": "https://..."
     }
   }
