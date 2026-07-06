@@ -7,6 +7,28 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.1] - 2026-07-06
+
+Bug fixes surfacing after the first day of real usage.
+
+### Fixed
+
+- **TUI footer misleading hint after fresh install.** When the daemon
+  socket existed but the current SSH session hadn't inherited the
+  new `nexguard` group yet, the footer said `sudo systemctl start
+  nexguard-tunneld` — wrong action. Now checks whether the socket
+  file exists and shows either `newgrp nexguard` (perm issue) or
+  `sudo systemctl start` (service down) accordingly.
+
+### Changed
+
+- **postinst confirmation.** Prints
+  `nexguard-tunneld service is running (enabled on boot).` after
+  systemctl restart succeeds, so the user isn't left guessing
+  whether the service actually came up.
+
+---
+
 ## [0.1.0] - 2026-07-06
 
 First public release. Rust + ratatui client with the same feature
