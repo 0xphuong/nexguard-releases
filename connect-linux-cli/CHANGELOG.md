@@ -7,6 +7,22 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.3] - 2026-07-07
+
+Bug fix — `nexguard status` no longer masks the good error.
+
+### Fixed
+
+- **`nexguard status` pre-flight ping printed the wrong hint.**
+  When the socket was reachable-but-permission-denied (fresh
+  install, current SSH session missing the `nexguard` group), the
+  old pre-flight sent users chasing `is nexguard-tunneld running`
+  when the real fix is `newgrp nexguard`. Same fix pattern the
+  TUI footer got in 0.1.1; the pre-flight is now gone and the
+  real `daemon::call` error path drives the message.
+
+---
+
 ## [0.1.2] - 2026-07-07
 
 Bug fix — postinst reliably starts the daemon on fresh installs.
