@@ -7,6 +7,26 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.2] - 2026-07-07
+
+Bug fix — postinst reliably starts the daemon on fresh installs.
+
+### Fixed
+
+- **postinst** — the prior revision swallowed `systemctl start`
+  failures with `|| true`. On some fresh installs there's a race
+  between `daemon-reload` picking up the just-copied service
+  file and the immediate `start` finding it, leaving the daemon
+  inactive after apt install and users hitting the TUI's
+  `Daemon unreachable — sudo systemctl start nexguard-tunneld`
+  footer even though the sudo command they'd have to type is
+  literally the fix. Postinst now retries the start up to 4
+  times with 1s sleep between and prints an explicit WARNING
+  with diagnose + retry commands if the service still can't
+  come up.
+
+---
+
 ## [0.1.1] - 2026-07-06
 
 Bug fixes surfacing after the first day of real usage.
