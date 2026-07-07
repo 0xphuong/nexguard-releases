@@ -7,6 +7,31 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.4] - 2026-07-07
+
+Bug fix — DNS stays reliable across connect/disconnect cycles.
+
+### Fixed
+
+- **ng-quick DNS handling** on systemd-resolved boxes:
+    - `set_dns`: pin `resolvectl default-route <iface> yes` in
+      addition to the `~.` routing domain, so resolved unambiguously
+      prefers our link's DNS. Flush caches immediately after so any
+      pre-existing negative-cache entries don't survive into the
+      session.
+    - `unset_dns`: flush caches after `resolvectl revert` so tunnel-
+      routed answers don't linger after the tunnel is down --
+      previously left users unable to resolve even the NexGuard
+      server hostname after a disconnect.
+
+Immediate workaround if upgrading via `nexguard update install`
+fails because DNS is broken:
+
+    sudo systemctl restart systemd-resolved
+    nexguard update install
+
+---
+
 ## [0.1.3] - 2026-07-07
 
 Bug fix — `nexguard status` no longer masks the good error.
