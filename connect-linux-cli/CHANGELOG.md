@@ -7,6 +7,54 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.2.0] - 2026-07-07
+
+TUI redesign — the fullscreen dashboard reads like an operator
+control panel now, not a splash screen. Same keybinds, same
+daemon protocol shape (all new snapshot fields are optional
+behind `#[serde(default)]`), so nothing else changes for users
+who prefer the plain `nexguard status` / `connect` CLI paths.
+
+### Added
+
+- **Data-dense Connected view** — TRAFFIC (↑ Sent / ↓ Recv /
+  live Rate) + SESSION (Uptime / Handshake age / DNS) side-by-
+  side cards, plus meta rows (Org / User / Address).
+- **Live bandwidth rate** computed client-side from the delta
+  between successive daemon snapshots — no daemon-side rate
+  field needed.
+- **Handshake-age telemetry** from `ng show latest-handshakes`
+  polled every 5s alongside transfer counters. Truest aliveness
+  signal: interface can be UP with a 5-min-old handshake.
+- **Client IPv4 + DNS resolvers** surfaced from the .conf so the
+  TUI proves the tunnel actually swapped the host resolvers,
+  not just brought a link up.
+- **Phase glyph + org label inline in the header** (k9s pattern):
+  `○` SignedOut, `◐` Disconnected, rotating `◐◓◑◒` Connecting
+  spinner, `●` Connected.
+- **Icon-prefixed toasts** on their own footer-adjacent row
+  (Info/Success/Warning/Error variants, auto-clear ~4s).
+- **Left-aligned STATUS card layout** across all four phases so
+  pressing `[C]` is a swap-in-place, not a full reflow.
+- **2-column Help overlay** with tinted section headers; `[A]`
+  context split (autostart / add-org-in-picker) documented on
+  one row.
+- **Header ellipsises long org names** rather than overflowing.
+- **Daemon-unreachable moved to a top banner** — matches
+  conflict + update banner slot, footer stays the keybind hint.
+- **Overlay backdrop dim** for Help + Org picker so modality
+  reads at a glance.
+
+### Compatibility
+
+`StatusSnapshot` gained four optional fields (`latest_handshake`,
+`client_ipv4`, `interface`, `dns`). A 0.2.0 CLI still talks to a
+0.1.x daemon during the rollout — missing fields render as `-`.
+
+Verified E2E on Ubuntu 22.04.5 (10.0.234.10) before ship.
+
+---
+
 ## [0.1.8] - 2026-07-07
 
 Security parity with macOS + Windows clients: enrolled device
