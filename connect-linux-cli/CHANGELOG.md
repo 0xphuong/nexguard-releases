@@ -7,6 +7,29 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.2.1] - 2026-07-07
+
+UX polish on top of the v0.2.0 TUI redesign — the OAuth flow now
+feels finished-out end-to-end.
+
+### Changed
+
+- **Browser callback page** rebuilt as a proper confirmation card
+  (accent green tick on success, red on failure) with a best-
+  effort `window.close()` — modern browsers block programmatic
+  close for tabs opened by `xdg-open`, but the polished card is
+  a friendlier resting state than the previous plain-text line.
+  Dark-mode aware.
+- **TUI auto-returns after sign-in success** — the cooked-mode
+  suspend/resume path used to always block on "Press Enter to
+  return to the TUI." Now sign-in success gives a 1.2s pause and
+  jumps straight back into the dashboard. Log-tail, add-org, and
+  errors still wait for Enter so the user can read them.
+
+Verified E2E on Ubuntu 22.04.5 (10.0.234.10) before ship.
+
+---
+
 ## [0.2.0] - 2026-07-07
 
 TUI redesign — the fullscreen dashboard reads like an operator
