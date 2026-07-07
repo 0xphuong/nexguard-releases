@@ -7,6 +7,33 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.8] - 2026-07-07
+
+Security parity with macOS + Windows clients: enrolled device
+names now carry a `/etc/machine-id[:8]` suffix so two Linux
+boxes with the same hostname can't share an approved device row.
+
+### Fixed
+
+- **Device name at enroll time** built as `"{hostname}
+  ({first-8-of-/etc/machine-id})"` -- parity with macOS
+  `IOPlatformUUID` prefix + Windows `MachineGuid` prefix. Falls
+  back to bare hostname if `/etc/machine-id` is missing.
+
+### User-visible impact
+
+Existing 0.1.0-0.1.7 Linux clients are enrolled server-side under
+just the hostname. After upgrading to 0.1.8 they enrol under the
+new suffixed name, so the server creates a **new device row that
+needs admin approval**. The old row is orphaned and can be
+deleted. This is the security fix paying its price -- prior
+versions let a same-hostname client piggy-back onto an
+already-approved row.
+
+Verified E2E on Ubuntu 22.04.5 (10.0.234.10) before ship.
+
+---
+
 ## [0.1.7] - 2026-07-07
 
 **Bumped `minimum` to 0.1.7.** 0.1.0-0.1.6 had a routing bug that
