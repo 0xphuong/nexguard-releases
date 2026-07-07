@@ -7,6 +7,45 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.1.7] - 2026-07-07
+
+**Bumped `minimum` to 0.1.7.** 0.1.0-0.1.6 had a routing bug that
+silently dropped AllowedIPs routes, breaking DNS + LAN access
+through the tunnel. Upgrade is mandatory.
+
+Two real-user bugs surfaced on 10.0.234.9 and fixed in this
+release:
+
+### Fixed
+
+- **Bare `wg show …` calls in vendored `ng-quick` weren't
+  renamed to `ng show`.** Only the helper-wrapped `cmd wg`
+  calls got the sed patch when we bundled the WireGuard tools
+  under `/usr/libexec/nexguard/ng`. Bare `$(wg show …)` and
+  `<(wg show …)` in process substitution silently returned
+  empty since `wg` isn't on the runtime PATH -- worst offender
+  was the AllowedIPs route-add loop, which iterated over
+  nothing and installed no routes to the tunnel subnets. DNS
+  and LAN traffic then went out the physical NIC and timed out.
+- **`bring_down` didn't guarantee interface removal.** ng-quick
+  can exit 0 while leaving a partially-torn-down interface in
+  the kernel; next connect hit `ng-nexguard already exists`.
+  `bring_down` now runs `ip link del` as a safety net.
+- **DNS handling for systemd-resolved.** Replace `/etc/resolv.conf`
+  as a plain file (backing up the symlink for exact restore)
+  AND push `resolvectl` per-link config -- belt-and-suspenders,
+  because `resolvectl` alone on systemd 245 (Ubuntu 20.04)
+  didn't route queries reliably even with `default-route yes` +
+  `~.`.
+
+### Skipped
+
+0.1.4/5/6 shipped intermediate fixes that turned out
+insufficient. Tags exist for bisection; changelog omits them
+for readability.
+
+---
+
 ## [0.1.4] - 2026-07-07
 
 Bug fix — DNS stays reliable across connect/disconnect cycles.
