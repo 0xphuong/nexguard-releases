@@ -41,14 +41,11 @@ over on any host without Homebrew bash on PATH.
 
 ### Added
 
-- **`install.command`** trong DMG — user double-click 1 lần sau khi
-  drag app vào Applications để xoá quarantine attribute và tránh
-  Gatekeeper warning *"Apple could not verify NexGuardConnect is
-  free of malware..."*. Automated hoá thao tác `xattr -dr
-  com.apple.quarantine` mà user vốn phải chạy trong Terminal, hoặc
-  vào System Settings ➜ Privacy & Security ➜ "Open Anyway".
-- **`README.txt`** trong DMG — 3 dòng hướng dẫn cài (drag app ➜
-  double-click install.command ➜ launch).
+- **`README.txt`** trong DMG — hướng dẫn 3 bước cài (drag app ➜
+  Terminal one-liner ➜ launch) kèm workaround qua System Settings
+  cho user không muốn dùng Terminal. Giải thích ngắn vì sao có
+  Gatekeeper warning (DMG chưa notarize, cần Apple Developer
+  Program).
 
 ### Notes
 
@@ -57,10 +54,11 @@ over on any host without Homebrew bash on PATH.
 - Currently arm64-only (matches the rest of the WireGuard tooling
   bundle). Universal 2 build would require `lipo`-merging bash
   from both Apple Silicon and Intel Homebrew prefixes.
-- `install.command` là workaround interim cho tới khi org đăng ký
-  Apple Developer Program ($99/năm) — proper fix là sign DMG với
-  Developer ID cert + notarize qua `xcrun notarytool submit`. Sau
-  đó có thể xoá install.command khỏi DMG.
+- Proper fix cho Gatekeeper warning là đăng ký Apple Developer
+  Program ($99/năm), tạo Developer ID cert, và notarize DMG qua
+  `xcrun notarytool submit`. Đã có sẵn code path trong
+  `build-dmg.sh` (`SIGN=1 NOTARIZE=1`). README.txt trong DMG là
+  interim guide cho user tự work-around.
 
 ---
 

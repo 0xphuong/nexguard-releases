@@ -6,7 +6,7 @@
       "minimum": "0.0.5",
       "released_at": "2026-07-08",
       "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuard-Connect-0.3.1.dmg",
-      "sha256": "3d70940bf63f1775da3ecb2db8723af67a90c7022db6c7dc4a27b1a05f6cd3e8",
+      "sha256": "f3674389ecfe09a23800d00ffe54cb7acaca423e0f6a64f22afd70632926cb99",
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#031---2026-07-08"
     },
     "nexguard-connect-windows": {
