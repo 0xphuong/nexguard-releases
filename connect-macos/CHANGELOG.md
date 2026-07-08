@@ -39,6 +39,17 @@ over on any host without Homebrew bash on PATH.
   admin shell command as `PATH=... 'bash' 'wg-quick' <op> cfg`;
   `isAvailable()` now also requires bash 4+.
 
+### Added
+
+- **`install.command`** trong DMG — user double-click 1 lần sau khi
+  drag app vào Applications để xoá quarantine attribute và tránh
+  Gatekeeper warning *"Apple could not verify NexGuardConnect is
+  free of malware..."*. Automated hoá thao tác `xattr -dr
+  com.apple.quarantine` mà user vốn phải chạy trong Terminal, hoặc
+  vào System Settings ➜ Privacy & Security ➜ "Open Anyway".
+- **`README.txt`** trong DMG — 3 dòng hướng dẫn cài (drag app ➜
+  double-click install.command ➜ launch).
+
 ### Notes
 
 - Bundled `bash` will be signed by `codesign --deep` alongside the
@@ -46,6 +57,10 @@ over on any host without Homebrew bash on PATH.
 - Currently arm64-only (matches the rest of the WireGuard tooling
   bundle). Universal 2 build would require `lipo`-merging bash
   from both Apple Silicon and Intel Homebrew prefixes.
+- `install.command` là workaround interim cho tới khi org đăng ký
+  Apple Developer Program ($99/năm) — proper fix là sign DMG với
+  Developer ID cert + notarize qua `xcrun notarytool submit`. Sau
+  đó có thể xoá install.command khỏi DMG.
 
 ---
 
