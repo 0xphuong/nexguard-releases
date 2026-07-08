@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2026-07-08
+
+Bundle bash 4+ to fix `wg-quick: Version mismatch: bash 3 detected,
+when bash 4+ required`. macOS ships `/bin/bash` = 3.2 (bash 4+
+became GPLv3, Apple can't ship in base OS), but `wg-quick` script
+requires bash 4+ (uses associative arrays). Previous 0.3.0 fell
+over on any host without Homebrew bash on PATH.
+
+### Fixed
+
+- **`Connect failed: wg-quick failed (exit 1)`** — bundle Homebrew
+  bash 5.x (~890 KB, arm64) into `App/Vendor/bin/bash` and invoke
+  `wg-quick` as `bundledBash wg-quick up cfg` — bypasses the
+  `#!/usr/bin/env bash` shebang (which resolves to `/bin/bash` 3.2
+  on macOS).
+
+### Changed
+
+- **`scripts/setup.sh`** — new step 5.5: copy bash from
+  `/opt/homebrew/bin/bash` (Apple Silicon) or
+  `/usr/local/bin/bash` (Intel); `brew install bash` if neither
+  exists.
+- **`App/Vendor/bin/nexguard-wg-helper`** — locate bash 4+
+  (bundled first, Homebrew fallback), exit 3 with actionable
+  message if none found.
+- **`App/Tunnel/WgQuickRunner.swift`** — new `bundledBashPath()`
+  with same discovery order; `bringUp`/`bringDown` compose the
+  admin shell command as `PATH=... 'bash' 'wg-quick' <op> cfg`;
+  `isAvailable()` now also requires bash 4+.
+
+### Notes
+
+- Bundled `bash` will be signed by `codesign --deep` alongside the
+  rest of the app bundle when `SIGN=1` is set on `build-dmg.sh`.
+- Currently arm64-only (matches the rest of the WireGuard tooling
+  bundle). Universal 2 build would require `lipo`-merging bash
+  from both Apple Silicon and Intel Homebrew prefixes.
+
+---
+
 ## [0.3.0] - 2026-07-04
 
 Verify update downloads with SHA-256. Manifest now carries a
