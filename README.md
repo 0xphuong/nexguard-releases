@@ -10,10 +10,38 @@ and Windows clients poll this repo to surface "Update available" /
 | File | Purpose |
 |---|---|
 | [`versions.json`](versions.json) | Machine-readable: latest + minimum version per product, download links, changelog deep-links. The client fetches this file. |
+| [`install-macos.sh`](install-macos.sh) | One-liner installer for NexGuard Connect (macOS). Downloads DMG, verifies SHA-256, strips Gatekeeper quarantine, installs to `/Applications`. |
+| [`install-linux.sh`](install-linux.sh) | One-liner installer for NexGuard Connect (Linux CLI). Downloads `.deb`, verifies SHA-256, installs via `dpkg`, verifies systemd daemon. |
 | [`connect-macos/CHANGELOG.md`](connect-macos/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) macOS client changelog. |
 | [`connect-windows/CHANGELOG.md`](connect-windows/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Windows client changelog. |
 | [`connect-linux-cli/CHANGELOG.md`](connect-linux-cli/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Linux CLI/TUI changelog. |
 | [`server/CHANGELOG.md`](server/CHANGELOG.md) | Mirror of the [NexGuard server](https://github.com/0xphuong/nexguard) changelog. |
+
+## Quick install
+
+### macOS
+
+```bash
+# Install latest
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-macos.sh | bash
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-macos.sh | bash -s -- --uninstall
+```
+
+The macOS installer auto-runs `xattr -dr com.apple.quarantine` for you (equivalent workaround the DMG README documents manually), so the app launches without the "Apple could not verify" Gatekeeper prompt.
+
+### Linux (Ubuntu 20.04+ / Debian, x86_64)
+
+```bash
+# Install latest
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-linux.sh | sudo bash
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-linux.sh | sudo bash -s -- --uninstall
+```
+
+Both scripts share the same UX contract: read `versions.json`, download the matching artifact, verify SHA-256 against the manifest, install, and cleanup. Flags: `--help`, `--force`, `--uninstall`, `--version`. Env vars: `INSTALL_VERSION`, `NO_COLOR`.
 
 ## Products
 
