@@ -10,8 +10,7 @@ and Windows clients poll this repo to surface "Update available" /
 | File | Purpose |
 |---|---|
 | [`versions.json`](versions.json) | Machine-readable: latest + minimum version per product, download links, changelog deep-links. The client fetches this file. |
-| [`install-macos.sh`](install-macos.sh) | One-liner installer for NexGuard Connect (macOS). Downloads DMG, verifies SHA-256, strips Gatekeeper quarantine, installs to `/Applications`. |
-| [`install-linux.sh`](install-linux.sh) | One-liner installer for NexGuard Connect (Linux CLI). Downloads `.deb`, verifies SHA-256, installs via `dpkg`, verifies systemd daemon. |
+| [`install.sh`](install.sh) | Universal installer for NexGuard Connect — auto-detects macOS vs Linux, downloads matching artifact, verifies SHA-256, installs. |
 | [`connect-macos/CHANGELOG.md`](connect-macos/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) macOS client changelog. |
 | [`connect-windows/CHANGELOG.md`](connect-windows/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Windows client changelog. |
 | [`connect-linux-cli/CHANGELOG.md`](connect-linux-cli/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Linux CLI/TUI changelog. |
@@ -19,29 +18,31 @@ and Windows clients poll this repo to surface "Update available" /
 
 ## Quick install
 
-### macOS
+One command, auto-detects your OS:
 
 ```bash
-# Install latest
-curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-macos.sh | bash
+# macOS
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | bash
 
-# Uninstall
-curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-macos.sh | bash -s -- --uninstall
+# Linux (needs root)
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | sudo bash
 ```
 
-The macOS installer auto-runs `xattr -dr com.apple.quarantine` for you (equivalent workaround the DMG README documents manually), so the app launches without the "Apple could not verify" Gatekeeper prompt.
-
-### Linux (Ubuntu 20.04+ / Debian, x86_64)
+Uninstall:
 
 ```bash
-# Install latest
-curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-linux.sh | sudo bash
-
-# Uninstall
-curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install-linux.sh | sudo bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | bash -s -- --uninstall        # macOS
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | sudo bash -s -- --uninstall   # Linux
 ```
 
-Both scripts share the same UX contract: read `versions.json`, download the matching artifact, verify SHA-256 against the manifest, install, and cleanup. Flags: `--help`, `--force`, `--uninstall`, `--version`. Env vars: `INSTALL_VERSION`, `NO_COLOR`.
+Pin a specific version: `INSTALL_VERSION=0.3.1 curl ... | bash`.
+
+Flags: `--help`, `--force`, `--uninstall`, `--version`. Env vars: `INSTALL_VERSION`, `INSTALL_PREFIX` (macOS), `NO_COLOR`.
+
+What the script does per OS:
+
+- **macOS** — mounts the DMG, copies `NexGuardConnect.app` to `/Applications`, then runs `xattr -dr com.apple.quarantine` so the Gatekeeper "Apple could not verify" prompt doesn't fire on first launch.
+- **Linux** (Ubuntu 20.04+ / Debian, x86_64) — installs the `.deb` via `dpkg -i` (with `apt-get install -f` fallback for deps), then verifies `nexguard-tunneld` is active. Reminds you to run `usermod -aG nexguard $USER` if not already.
 
 ## Products
 
