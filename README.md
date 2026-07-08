@@ -11,6 +11,7 @@ and Windows clients poll this repo to surface "Update available" /
 |---|---|
 | [`versions.json`](versions.json) | Machine-readable: latest + minimum version per product, download links, changelog deep-links. The client fetches this file. |
 | [`install.sh`](install.sh) | Universal installer for NexGuard Connect — auto-detects macOS vs Linux, downloads matching artifact, verifies SHA-256, installs. |
+| [`install.ps1`](install.ps1) | Windows installer for NexGuard Connect — downloads MSI, verifies SHA-256, installs via `msiexec` (needs Administrator). |
 | [`connect-macos/CHANGELOG.md`](connect-macos/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) macOS client changelog. |
 | [`connect-windows/CHANGELOG.md`](connect-windows/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Windows client changelog. |
 | [`connect-linux-cli/CHANGELOG.md`](connect-linux-cli/CHANGELOG.md) | Mirror of the [NexGuard Connect](https://github.com/0xphuong/nexguard-connect) Linux CLI/TUI changelog. |
@@ -18,13 +19,13 @@ and Windows clients poll this repo to surface "Update available" /
 
 ## Quick install
 
-One command, auto-detects your OS:
+### macOS / Linux — one shell script, auto-detects OS
 
 ```bash
 # macOS
 curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | bash
 
-# Linux (needs root)
+# Linux (Ubuntu 20.04+ / Debian, x86_64, needs root)
 curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | sudo bash
 ```
 
@@ -39,10 +40,30 @@ Pin a specific version: `INSTALL_VERSION=0.3.1 curl ... | bash`.
 
 Flags: `--help`, `--force`, `--uninstall`, `--version`. Env vars: `INSTALL_VERSION`, `INSTALL_PREFIX` (macOS), `NO_COLOR`.
 
-What the script does per OS:
+Per-OS behavior:
 
 - **macOS** — mounts the DMG, copies `NexGuardConnect.app` to `/Applications`, then runs `xattr -dr com.apple.quarantine` so the Gatekeeper "Apple could not verify" prompt doesn't fire on first launch.
-- **Linux** (Ubuntu 20.04+ / Debian, x86_64) — installs the `.deb` via `dpkg -i` (with `apt-get install -f` fallback for deps), then verifies `nexguard-tunneld` is active. Reminds you to run `usermod -aG nexguard $USER` if not already.
+- **Linux** — installs the `.deb` via `dpkg -i` (with `apt-get install -f` fallback for deps), then verifies `nexguard-tunneld` is active. Reminds you to run `usermod -aG nexguard $USER` if not already.
+
+### Windows — PowerShell (Admin)
+
+Open PowerShell **as Administrator**:
+
+```powershell
+# Latest
+irm https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.ps1 | iex
+
+# Specific version
+$env:INSTALL_VERSION = '0.3.1'
+irm https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.ps1 | iex
+
+# Uninstall (scriptblock form so args pass through)
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.ps1))) -Uninstall
+```
+
+Flags: `-Uninstall`, `-Force`, `-Version`, `-Help`. Env vars: `$env:INSTALL_VERSION`, `$env:NO_COLOR`.
+
+Downloads `NexGuardConnect-<ver>.msi`, verifies SHA-256, installs per-machine via `msiexec /i /passive /norestart ALLUSERS=1`. Requires Windows 10 build 1809+ / Windows 11 · x64 · Administrator.
 
 ## Products
 
