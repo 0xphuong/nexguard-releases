@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-07-13
+
+Additive telemetry release — pairs with NexGuard server 3.2.0.
+
+### Added
+
+- **Host OS + CPU architecture headers** on every request to the
+  NexGuard server. `App.xaml.cs::ConfigureNexGuardHeaders` now stamps
+  three new headers in addition to the existing Platform/Version pair:
+
+      X-NexGuard-Client-OS-Name      Registry ProductName      ("Windows Server 2022 Datacenter")
+      X-NexGuard-Client-OS-Version   Environment.OSVersion     ("10.0.20348")
+      X-NexGuard-Client-Arch         RuntimeInformation.OSArch ("x86_64" | "arm64")
+
+  Product name comes from `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProductName`
+  (wrapped in try/catch so a locked-down registry never crashes an
+  auth request). OS version is `Environment.OSVersion.Version.ToString(3)`
+  ("10.0.20348" — 3 parts, revision omitted since it's almost always 0).
+  Arch is normalized to match the macOS convention (`X64` → `x86_64`,
+  `Arm64` → `arm64`) so fleet queries like "list all arm64 devices"
+  work across platforms.
+
+  Server (v3.2.0+) surfaces these in the admin UI (Devices index +
+  Device Details card). Older servers ignore unknown headers — no
+  coordinated release required.
+
+  Passive telemetry, best-effort, no enforcement gate.
+
+### Changed
+
+- `<Version>` bumped `0.3.1` → `0.4.0` in `NexGuardConnect.csproj`
+  (MINOR: new server-facing capability). MSI ProductVersion follows.
+
+---
+
 ## [0.3.1] - 2026-07-04
 
 Bug fix: tray popup footer version string is now dynamic.
