@@ -59,12 +59,15 @@ $ManifestUrl = 'https://raw.githubusercontent.com/0xphuong/nexguard-releases/mai
 $ProductId   = 'nexguard-connect-windows'
 $ProductName = 'NexGuard Connect'
 
-# ── Colors (ANSI, VT sequence — Win10+ terminals) ───────────
+# ── Colors (ANSI VT — Win10+; use [char]27 so PS 5.1 works too) ─
+# PowerShell 5.1 (default trên Windows Server 2022) không hiểu `"``e"`
+# escape, nó output literal 'e'. [char]27 chạy được cả 5.1 lẫn 7+.
+$ESC = [char]27
 $SupportsColor = -not $env:NO_COLOR -and $Host.UI.SupportsVirtualTerminal
 if ($SupportsColor) {
-    $Bold = "`e[1m"; $Dim = "`e[2m"; $Reset = "`e[0m"
-    $Green = "`e[32m"; $Red = "`e[31m"; $Yellow = "`e[33m"
-    $Blue = "`e[34m"; $Cyan = "`e[36m"
+    $Bold = "$ESC[1m"; $Dim = "$ESC[2m"; $Reset = "$ESC[0m"
+    $Green = "$ESC[32m"; $Red = "$ESC[31m"; $Yellow = "$ESC[33m"
+    $Blue = "$ESC[34m"; $Cyan = "$ESC[36m"
 } else {
     $Bold = ''; $Dim = ''; $Reset = ''
     $Green = ''; $Red = ''; $Yellow = ''; $Blue = ''; $Cyan = ''
@@ -152,14 +155,17 @@ function Get-InstalledProduct {
     )
     foreach ($root in $roots) {
         if (-not (Test-Path $root)) { continue }
-        Get-ChildItem $root -ErrorAction SilentlyContinue | ForEach-Object {
-            $item = Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue
-            if ($item -and $item.DisplayName -and $item.DisplayName -like "*NexGuard*Connect*") {
+        foreach ($key in Get-ChildItem $root -ErrorAction SilentlyContinue) {
+            $item = Get-ItemProperty $key.PSPath -ErrorAction SilentlyContinue
+            if (-not $item) { continue }
+            # Strict mode throws on missing properties, phải check tồn tại trước.
+            $displayName = if ($item.PSObject.Properties['DisplayName']) { $item.DisplayName } else { $null }
+            if ($displayName -and $displayName -like '*NexGuard*Connect*') {
                 return [PSCustomObject]@{
-                    DisplayName     = $item.DisplayName
-                    DisplayVersion  = $item.DisplayVersion
-                    UninstallString = $item.UninstallString
-                    ProductCode     = $_.PSChildName
+                    DisplayName     = $displayName
+                    DisplayVersion  = if ($item.PSObject.Properties['DisplayVersion'])  { $item.DisplayVersion }  else { '' }
+                    UninstallString = if ($item.PSObject.Properties['UninstallString']) { $item.UninstallString } else { '' }
+                    ProductCode     = $key.PSChildName
                 }
             }
         }
