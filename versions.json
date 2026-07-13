@@ -26,11 +26,11 @@
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-linux-cli/CHANGELOG.md#030---2026-07-13"
     },
     "nexguard-server": {
-      "latest": "3.1.0",
+      "latest": "3.2.0",
       "minimum": "3.0.0",
-      "released_at": "2026-07-03",
-      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v3.1.0",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#310---2026-07-03"
+      "released_at": "2026-07-13",
+      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v3.2.0",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#320---2026-07-13"
     }
   }
 }

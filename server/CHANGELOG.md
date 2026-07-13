@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2026-07-13
+
+Additive telemetry release. One migration extends `devices` with
+three nullable columns; no schema changes to existing columns, no
+breaking API changes — older clients that don't send the new
+headers keep working unchanged.
+
+### Added
+
+- **Host OS + CPU architecture telemetry on `devices`.** Three new
+  nullable columns via migration `20260714000001_add_client_os_to_devices.exs`:
+
+      client_os_name       ("macOS" | "Windows Server 2022 Datacenter" | "Ubuntu")
+      client_os_version    ("14.3.1" | "10.0.20348" | "22.04")
+      client_arch          ("arm64" | "x86_64" | "aarch64")
+
+  Populated from new HTTP headers `X-NexGuard-Client-OS-Name` /
+  `-OS-Version` / `-Arch` set by native clients on every authenticated
+  request (macOS ≥ 0.4.0, Windows ≥ 0.4.0, Linux CLI ≥ 0.3.0).
+  `Devices.record_client_info/2` now takes a map so the ingestion
+  path handles all five telemetry fields uniformly.
+
+  Admin UI:
+  - Devices index — new secondary line under the Client column
+    shows `<os_name> <os_version> · <arch>`. Primary line still
+    reads `<platform> · <client_version>`.
+  - Device details Client card — two new rows: **Operating System**
+    (name + version) and **Architecture** (mono-formatted).
+
+  Same best-effort ingestion policy as `client_version`: passive
+  telemetry, DB failure is logged + swallowed so a telemetry write
+  never breaks enroll / config flows.
+
+### Docs
+
+- README gains a **NexGuard Connect (VPN client)** section with the
+  cross-platform one-liner installers (`install.sh` for macOS/Linux,
+  `install.ps1` for Windows) hosted in the [`nexguard-releases`](https://github.com/0xphuong/nexguard-releases)
+  repo. Scripts fetch `versions.json`, verify SHA-256, and (on
+  macOS) strip the Gatekeeper `com.apple.quarantine` attribute
+  automatically.
+
+---
+
 ## [3.1.0] - 2026-07-03
 
 Two feature adds serving the native clients. No breaking API
