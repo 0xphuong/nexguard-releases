@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-07-13
+
+Additive telemetry release — pairs with NexGuard server 3.2.0.
+
+### Added
+
+- **Host OS + CPU architecture headers** on every request to the
+  NexGuard server. `NexGuardClientHeaders.swift` now stamps three
+  new headers in addition to the existing Platform/Version pair:
+
+      X-NexGuard-Client-OS-Name      "macOS"
+      X-NexGuard-Client-OS-Version   "14.3.1"   (formatted major.minor.patch)
+      X-NexGuard-Client-Arch         "arm64" | "x86_64"
+
+  OS version comes from `ProcessInfo.processInfo.operatingSystemVersion`.
+  Arch comes from `sysctlbyname("hw.machine")` -- NOT Swift's
+  `#if arch()`, because the latter reports BUILD arch and would
+  hide Rosetta cases. On Apple Silicon running under Rosetta the
+  header correctly reports `x86_64`, which is exactly the signal
+  admins need when a user reports "app feels slow" on M-series
+  hardware (native arm64 build missing → user is on Rosetta).
+
+  Server (v3.2.0+) logs these into new `devices.client_os_name` /
+  `client_os_version` / `client_arch` columns and surfaces them in
+  the admin UI under the Client column (secondary line) + Device
+  Details card (Operating System + Architecture rows). Older
+  servers ignore the unknown headers -- no coordination required.
+
+  Passive telemetry, best-effort ingestion, no enforcement gate.
+
+---
+
 ## [0.3.1] - 2026-07-08
 
 Bundle bash 4+ to fix `wg-quick: Version mismatch: bash 3 detected,
