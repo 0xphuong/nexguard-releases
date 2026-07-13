@@ -7,6 +7,37 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.3.0] - 2026-07-13
+
+Additive telemetry release — pairs with NexGuard server 3.2.0.
+
+### Added
+
+- **Host OS + CPU architecture headers** on every request to the
+  NexGuard server. `crates/nexguard-cli/src/api.rs::client_headers`
+  now stamps three new headers on top of Platform/Version:
+
+      x-nexguard-client-os-name      /etc/os-release NAME     ("Ubuntu")
+      x-nexguard-client-os-version   /etc/os-release VERSION_ID  ("22.04")
+      x-nexguard-client-arch         std::env::consts::ARCH   ("x86_64" | "aarch64")
+
+  `/etc/os-release` is parsed once via `OnceLock` so the hot path
+  stays allocation-free. Missing/empty fields are skipped (server
+  sees null, not a misleading "unknown"). Prefer `NAME` over
+  `PRETTY_NAME` so the OS-Name column stays orthogonal to
+  OS-Version (no "Ubuntu 22.04.3 LTS" bleeding into both fields).
+
+  Server (v3.2.0+) surfaces these in the admin UI (Devices index +
+  Device Details). Older servers ignore unknown headers — no
+  coordinated release required.
+
+### Changed
+
+- Workspace version bumped `0.2.1` → `0.3.0` (MINOR: new
+  server-facing capability).
+
+---
+
 ## [0.2.1] - 2026-07-07
 
 UX polish on top of the v0.2.0 TUI redesign — the OAuth flow now
