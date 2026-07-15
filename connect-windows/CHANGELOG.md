@@ -9,6 +9,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-07-15
+
+Ownership + branding release. Tunnel service registered as our own
+**`NexGuardManager`** instead of the upstream-derived
+`WireGuardTunnel$nexguard`. Standalone WireGuard for Windows can
+now be installed side-by-side without collision. UAC prompt drops
+to once at install/first-connect. "Launch at login" toggle finally
+works + shows a visible checkmark.
+
+### Changed
+
+- **Windows Service renamed** `WireGuardTunnel$nexguard` →
+  **`NexGuardManager`**. Upstream `wireguard.exe /installtunnelservice`
+  hardcodes the prefix `WireGuardTunnel$` and we can't override it;
+  v0.5.0 bypasses that command and registers the service directly
+  via `sc.exe create` pointing at `wireguard.exe /tunnelservice`
+  (worker mode, no name hardcoding). Practical wins:
+    * NexGuard Connect + standalone WireGuard for Windows coexist.
+    * services.msc + Task Manager + Event Viewer show
+      "NexGuardManager" / "NexGuard Manager".
+    * Migration cleanup in `tunnel-up.ps1` — the first run after
+      upgrade stops + deletes any leftover `WireGuardTunnel$nexguard`
+      service before creating `NexGuardManager`. No manual steps
+      required.
+
+- **Config path moves** from `%LOCALAPPDATA%\NexGuardConnect\nexguard.conf`
+  (per-user, wiped on profile delete) to
+  **`%ProgramData%\NexGuardConnect\nexguard.conf`** (machine-scoped,
+  always readable by the LocalSystem-run tunnel worker). File ACL:
+  SYSTEM + Administrators + current user, inheritance off.
+
+- **Standalone WireGuard for Windows detection** — `ConflictDetector`
+  reads the WireGuardManager service ImagePath from the registry.
+  Since v0.5.0 the two installs don't share a service name, so the
+  presence of a standalone install is now just an INFO log line
+  (no blocking dialog, no ErrorMessage banner). Kept because the
+  older WireGuard install ships a vintage WinTUN driver that CAN
+  fight ours on adapter creation on Win11 24H2 -- worth having in
+  the support triage record.
+
+### Fixed
+
+- **Windows 11 24H2 "handshake stale" forever.** Root cause was
+  the WireGuardManager singleton service being claimed by a
+  standalone WireGuard for Windows install (2021 vintage) that
+  couldn't talk to the modern proxy handshake protocol. Service
+  rename above removes the contention -- NexGuard's own service
+  pipeline handles the tunnel end-to-end.
+
+- **Tunnel service shut down immediately with "Firewall error at
+  helpers.go:100: The specified group does not exist"** (exit
+  code 1319). `sc.exe create` doesn't set `SidType` on the new
+  service, so the tunnel worker has no per-service SID to identify
+  itself to WFP when it tries to register firewall filter rules.
+  Fix: after `sc create`, run `sc sidtype NexGuardManager unrestricted`
+  and `sc privs NexGuardManager` with the minimum privilege list
+  (SeChangeNotifyPrivilege / SeImpersonatePrivilege /
+  SeCreateGlobalPrivilege / SeAssignPrimaryTokenPrivilege /
+  SeLoadDriverPrivilege). Worker completes "Enabling firewall
+  rules" and adapter reaches Up within ~2s.
+
+- **PowerShell console flashed briefly on every Connect + Disconnect.**
+  `Process.Start` with `Verb="runas"` routes through `ShellExecute`
+  which ignores `CreateNoWindow` and `WindowStyle=Hidden`. Fix:
+  call `ShellExecuteExW` directly via P/Invoke with `nShow = SW_HIDE`
+  + `-WindowStyle Hidden` on the PowerShell command line as
+  belt-and-braces. UAC prompt still shows, but no console flash
+  and no taskbar entry.
+
+- **UAC prompt on every Connect + Disconnect.** Users were seeing
+  an elevation prompt every single toggle. Fix in two parts:
+    1. When creating `NexGuardManager` we now also run
+       `sc sdset` granting the built-in `Users` group
+       `SERVICE_START | SERVICE_STOP | SERVICE_QUERY_STATUS`
+       (SDDL fragment `(A;;LCRPWPRC;;;BU)`) -- Users can toggle
+       the service without elevation, but still can't change
+       config, delete, or write to its ACL.
+    2. `BringUpAsync` / `BringDownAsync` have a fast path that
+       calls `ServiceController.Start()` / `.Stop()` directly.
+       On the second and every subsequent Connect after install,
+       the fast path succeeds and NO UAC prompt appears. Elevated
+       PowerShell fallback runs only when service doesn't exist
+       yet (fresh install / first Connect) or SDDL is wrong
+       (upgrade from pre-0.5.0-sdset build). In that fallback,
+       the script re-applies sidtype + privs + sdset on the
+       existing service instead of delete+recreate.
+
+- **"Launch at login" toggle looked broken.** Two issues stacked:
+    1. No visible state feedback — the WPF default `IsCheckable`
+       glyph is a tiny tick that many users don't spot,
+       especially on dark themes. Fix: reuse the same green
+       Fluent-icon checkmark pattern the Organizations list
+       uses (`CheckmarkIcon()` in TrayPopupWindow). Same green
+       tint as the "Connected" status stripe.
+    2. Registry write went to a bogus path under single-file
+       publish. `AutoLaunch.Enable()` used
+       `Assembly.GetEntryAssembly()?.Location` which returns
+       empty or a .dll path under .NET 8 single-file, so
+       Explorer had nothing runnable to launch at login. Fix:
+       switch to `Environment.ProcessPath` (real .exe path).
+       `Enable/Disable` now return bool and the UI surfaces
+       actual failure via a MessageBox.
+
+---
+
 ## [0.4.0] - 2026-07-13
 
 Additive telemetry release — pairs with NexGuard server 3.2.0.
