@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-07-15
+
+Portability release. The bundled `bash` binary now works on every
+macOS 13.0+ machine without Homebrew, and ships as a Universal
+Binary (arm64 + x86_64). Fixes `Library not loaded:
+libncursesw.6.dylib` crash reported on macOS 15.7.7 (Sequoia).
+
+### Changed
+
+- **New `scripts/build-bash.sh`** builds `bash 5.2.37` from source,
+  static-linked against `readline 8.2` and the system-provided
+  ncurses (via SDK's `libncurses.tbd` — dyld shared cache carries
+  this on every macOS 13.0+). Output is a Universal Binary with
+  `LC_BUILD_VERSION minos = 13.0`. Cache-friendly.
+- **`scripts/setup.sh`** no longer `cp`s `/opt/homebrew/bin/bash`.
+  It invokes the new build script and verifies the produced binary
+  has no `/opt/homebrew` or `/usr/local` deps before bundling.
+- **`CLAUDE.md`** — new "Multi-macOS-version bundling" section
+  documenting the two independent trap categories (Mach-O
+  deployment target inheritance + dynamic dylib absolute-path deps).
+
+### Fixed
+
+- **`Connect failed: wg-quick failed (exit 6): dyld[…] Library not
+  loaded: libncursesw.6.dylib`** on macOS 15.7.7. Root cause was
+  `setup.sh` copying Homebrew's bash straight into the app bundle,
+  which:
+    * Was built for macOS 26.0 (`LC_VERSION_MIN_MACOSX` inherited
+      from the maintainer's Tahoe dev box).
+    * Referenced `/opt/homebrew/opt/{ncurses,readline,gettext}/…`
+      absolute paths that don't exist without matching Homebrew.
+  Fix rebuilds bash from source targeting macOS 13.0 with only
+  system libraries. Verified on macOS 15.7.7 + 26.5.1.
+
+### Known issues
+
+- **PendingApproval flow on macOS 26.3.0** — some users report the
+  app landing in "Ready to connect" after sign-in even though the
+  device is not yet admin-approved. Cannot reproduce on macOS
+  26.5.1. Workaround: admin-approve the device from the portal
+  (Devices → click device → Approve). Full postmortem in a
+  follow-up release.
+
+---
+
 ## [0.4.0] - 2026-07-13
 
 Additive telemetry release — pairs with NexGuard server 3.2.0.
