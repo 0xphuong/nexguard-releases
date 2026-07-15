@@ -9,6 +9,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.3] - 2026-07-15
+
+Canary release used to verify 0.5.2's streamDownload timeout fix
+end-to-end. Content identical to 0.5.2 aside from the version
+bump. Verified: 0.5.2 → 0.5.3 auto-update succeeded on the box
+that previously failed with 0.5.0 → 0.5.1 timeout.
+
+Users on 0.5.0 / 0.5.1 still hit the old timeout while pulling
+this version — same as trying to pull 0.5.2. Escape hatch is a
+one-time manual install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/0xphuong/nexguard-releases/main/install.sh | bash
+```
+
+Once 0.5.2+ is on disk, auto-update is reliable for future releases.
+
+---
+
+## [0.5.2] - 2026-07-15
+
+Fixes "download timed out, try again on a faster connection"
+error that hit users on corporate / captive-portal networks
+while auto-updating from 0.5.0 → 0.5.1.
+
+### Fixed
+
+- **Auto-update DMG download failing with `NSURLErrorTimedOut`**
+  while manual `curl` / browser downloads of the same URL
+  succeeded. The old `streamDownload` used `URLSession.shared`
+  with `request.timeoutInterval = 30`, which is an *idle*
+  timeout — no bytes for 30 s means fail even though overall
+  bandwidth is fine. Corp proxies + captive portals routinely
+  stall byte streams for 30–60 s during TCP window ramp-up or
+  proxy re-handshake.
+
+  Fix uses a dedicated `URLSession` with:
+    * `timeoutIntervalForRequest = 120` (idle tolerance, 4× the
+      old value)
+    * `timeoutIntervalForResource = 900` (overall 15-min ceiling)
+    * `waitsForConnectivity = true` (rides out brief blips)
+
+  Error message reworded — "try on a faster connection"
+  misdiagnosed the root cause (URLSession idle timeout, not
+  bandwidth). New text points at the manual install one-liner
+  as fallback.
+
+### Upgrade path
+
+Users stuck on 0.5.0 / 0.5.1 (auto-updater hits the same bug
+pulling 0.5.2): install manually via
+`curl -fsSL .../install.sh | bash`, then subsequent
+auto-updates work.
+
+---
+
 ## [0.5.1] - 2026-07-15
 
 Fixes a zombie DNS state after sleep/wake — users on Wi-Fi saw
