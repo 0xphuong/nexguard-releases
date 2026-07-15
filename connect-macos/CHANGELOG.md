@@ -9,6 +9,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1] - 2026-07-15
+
+Fixes a zombie DNS state after sleep/wake — users on Wi-Fi saw
+"no internet" after macOS put their laptop to sleep with the
+tunnel up, because the system DNS was still pointing at the
+tunnel resolver (e.g. `10.0.22.254`) that only exists inside the
+VPN.
+
+### Changed
+
+- **Helper script `nexguard-wg-helper`** picks up a new `dns-reset`
+  action. Iterates every enabled network service, and when the
+  service's current DNS matches the tunnel DNS passed as `$2`,
+  resets it to `Empty` (macOS's incantation for "revert to
+  DHCP-provided"). Also flushes `mDNSResponder` so apps don't
+  keep resolving from in-process cache. Idempotent.
+
+- **`HelperInstaller`** gains `isCurrent()` + `ensureCurrent()`.
+  On bootstrap, if the installed helper's SHA-256 differs from
+  the version we ship, the app silently re-runs `install()` —
+  one admin prompt per upgrade, then cache-hit forever.
+  Operators upgrading 0.5.0 → 0.5.1 hit this once so their
+  helper learns the new `dns-reset` action.
+
+### Fixed
+
+- **DNS stuck at tunnel resolver after sleep/wake.** When macOS
+  suspends, the tunnel process typically dies without wg-quick's
+  PostDown hook running, so system DNS remains pointed at
+  `10.0.22.254`, which only lives inside the VPN. On wake the
+  browser reports "no internet" because every DNS lookup fails.
+  Fix is threefold:
+    1. On `NSWorkspace.willSleepNotification`, if the tunnel is up,
+       tear it down cleanly before macOS suspends — wg-quick's
+       PostDown restores DNS the normal way inside the ~1-2s
+       window macOS gives us.
+    2. On `NSWorkspace.didWakeNotification`, if the tunnel is NOT
+       active on wake (killed by sleep despite step 1), call the
+       helper's `dns-reset` action to sweep lingering tunnel DNS
+       off enabled network services.
+    3. On app bootstrap, `cleanupOrphanTunnel()` also calls
+       `restoreDns()` so a stale DNS state cannot survive an
+       app restart after a crash.
+
+### Known issues (carried over from 0.5.0)
+
+- **PendingApproval flow on macOS 26.3.0** — still under
+  investigation. Workaround: admin-approve the device from the
+  portal (Devices → click device → Approve).
+
+---
+
 ## [0.5.0] - 2026-07-15
 
 Portability release. The bundled `bash` binary now works on every
