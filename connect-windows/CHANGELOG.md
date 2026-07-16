@@ -9,6 +9,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1] - 2026-07-16
+
+Internal DNS through the tunnel now survives Disconnect + Reconnect.
+Zero UX change from 0.5.0 -- same tray icon flow, same 0 UAC prompts
+on Connect/Disconnect.
+
+### Fixed
+
+- **Internal DNS breaks on the 2nd (and every subsequent) Connect.**
+  Symptom: after the very first Connect on a fresh 0.5.0 install
+  internal names (e.g. an org-internal DNS zone) resolve fine. After
+  a Disconnect + Connect cycle, they stop resolving, while public
+  names (`google.com`) keep working. Only Windows was affected;
+  macOS + Linux clients on the same server were fine.
+
+  Root cause layered:
+
+    1. The v0.5.0 no-UAC-per-Connect fast path (`ServiceController
+       .Start` from the medium-integrity tray app) skipped the
+       elevated `tunnel-up.ps1` script that used to set the tunnel
+       adapter's `InterfaceMetric = 1`. Every Connect after the
+       very first hit fast path -> metric stayed at auto (~5),
+       tying with the Ethernet adapter -> Ethernet's public DNS
+       won ties -> CoreDNS on the tunnel was never queried.
+    2. Even the pre-fast-path script set metric WITHOUT
+       `-AutomaticMetric Disabled`. The TCP/IP stack recomputes
+       metric on the next routing change and reverts to auto
+       unless the flag says "don't".
+    3. `wireguard.exe /tunnelservice` worker calls
+       `SetIpInterfaceEntry` with `UseAutomaticMetric=TRUE` ~2 s
+       after the SCM Event 7036 fires (post-adapter-Up route
+       configuration in the WG worker), so a single
+       `Set-NetIPInterface` call gets overwritten.
+
+  Fix (matches the "no-UAC-per-Connect" design goal):
+
+    - **New Scheduled Task** `\NexGuardConnect\SetTunnelMetric`
+      registered by the MSI installer. Runs as `NT AUTHORITY\
+      SYSTEM`. Triggered by SCM Event 7036 filtered to
+      `param1='NexGuard Manager'` -- fires on every service state
+      transition. The action polls the `nexguard` adapter to reach
+      Up, then runs `Set-NetIPInterface -InterfaceMetric 1
+      -AutomaticMetric Disabled` for IPv4 + IPv6 in an 8-attempt
+      retry loop (~8 s window) to survive wireguard.exe's post-Up
+      overwrite, then `Clear-DnsClientCache`.
+    - **No UAC bleed-through.** Task installs at MSI install-time
+      inside the already-elevated msiexec transaction; runtime
+      invocations run as SYSTEM via Task Scheduler, invisible to
+      the tray app. Connect/Disconnect UX unchanged from 0.5.0.
+    - **`-AutomaticMetric Disabled`** added to the elevated
+      slow-path `tunnel-up.ps1` too, defense-in-depth for
+      first-Connect on fresh installs.
+    - **Uninstall CustomAction** removes the task + its action
+      script cleanly.
+
+  Rollback safe: reverting to 0.5.0 leaves the task orphaned but
+  its action is exactly what 0.5.0 wants on its metric step
+  (harmless). To fully remove after rollback:
+  `Unregister-ScheduledTask -TaskPath '\NexGuardConnect\' -TaskName
+  SetTunnelMetric -Confirm:$false` from an elevated PS.
+
+### Notes for enterprise / hardened environments
+
+- **Task Scheduler service must be enabled.** Some STIG / CIS L2
+  images disable it; in that case the task never fires and this
+  fix is a no-op (falls back to whatever metric wintun picked).
+- **Enterprise GPO pinning `AutomaticMetric = Enabled`** on all
+  interfaces overrides this fix the same way it would override a
+  manual `Set-NetIPInterface`. Doc-only issue.
+
+---
+
 ## [0.5.0] - 2026-07-15
 
 Ownership + branding release. Tunnel service registered as our own
