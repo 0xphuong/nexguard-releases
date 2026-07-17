@@ -9,6 +9,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.4] - 2026-07-17
+
+DNS strategy shift: no more zombie DNS after unclean exits + reboot.
+Wi-Fi's networksetup DNS is now untouched (matches WireGuard.app's
+behaviour); tunnel DNS lives in ephemeral `scutil` state instead of
+persistent `networksetup` config.
+
+### Fixed
+
+- **"No internet after NexGuard was force-quit or laptop was
+  suddenly shut down" -- gone.** Previous versions relied on
+  `wg-quick`'s macOS DNS handling, which uses
+  `networksetup -setdnsservers <service> <ip>` to install the
+  tunnel DNS. That writes to `Setup:/Network/Service/<UUID>/DNS`
+  which is PERSISTENT -- it survives reboot, power loss, kernel
+  panic, and SIGKILL. When the tunnel died uncleanly, the user's
+  Wi-Fi (and every other enabled service) stayed pointed at a
+  tunnel-only DNS (e.g. 10.0.22.254). On next boot: nothing outside
+  the VPN resolved, browsers threw "server not found", the user
+  thought their internet was broken.
+
+  Fix: the bundled `nexguard-wg-helper` now installs the tunnel
+  DNS via `scutil` at `State:/Network/Service/nexguard/DNS`
+  instead. That's an EPHEMERAL entry -- lives only in `configd`'s
+  in-memory store, cleared automatically on every reboot. Same
+  mechanism WireGuard.app (via `NEDNSSettings` + Network
+  Extension) uses under the hood -- we just take the non-NE path
+  since a free Apple ID can't ship NE-entitled binaries.
+
+  Consequences the user will notice:
+
+    * `networksetup -getdnsservers "Wi-Fi"` after Connect: shows
+      **"There aren't any DNS Servers set on Wi-Fi"** (unchanged
+      from disconnected state). Compare with pre-0.5.4: showed
+      the tunnel DNS.
+    * `scutil --dns` after Connect: tunnel DNS appears as
+      resolver #1 with SearchOrder 10000 and matches all queries
+      (SupplementalMatchDomains empty-string wildcard).
+    * After a hard crash + reboot: **zombie DNS impossible by
+      construction**. State:/ store is wiped on boot.
+    * After a crash while the session is still up (no reboot):
+      SIGTERM / SIGINT / SIGHUP / Cmd-Q / Dock Quit paths now
+      invoke the helper's `dns-reset` synchronously via signal
+      handler + `NSApplication.willTerminateNotification`. SIGKILL
+      / kernel panic / power loss still leave a scutil residue but
+      the fallback is degraded-gracefully: `SupplementalMatchDomains`
+      routes queries through the tunnel resolver as a SUPPLEMENTAL
+      resolver, so when it stops answering macOS falls through to
+      the DHCP-provided Wi-Fi DNS. Real internet keeps working.
+    * Legacy zombies from pre-0.5.4 installs (`networksetup`
+      residues on Wi-Fi + Thunderbolt Bridge + Ethernet + tethering
+      services): the extended `dns-reset` action now sweeps BOTH
+      the new scutil entry AND legacy networksetup entries whose
+      current DNS matches the tunnel DNS.
+    * New "Restore DNS to Default" affordance under
+      Advanced menu (disabled state only) as a user-facing
+      escape hatch.
+
+### Notes for upgrading
+
+- **First launch on 0.5.4 will re-prompt for the helper install**
+  once (helper script hash changed). Subsequent launches are
+  silent.
+- No changes to sign-in / connect UX. Same tunnel bring-up flow,
+  same 0-UAC once helper is installed.
+- Rollback 0.5.4 → 0.5.3: `HelperInstaller.ensureCurrent()`
+  detects the hash mismatch and reinstalls the old helper on
+  first launch. One admin prompt on downgrade, then behaviour
+  reverts to pre-0.5.4 (including the zombie risk).
+
+---
+
 ## [0.5.3] - 2026-07-15
 
 Canary release used to verify 0.5.2's streamDownload timeout fix
