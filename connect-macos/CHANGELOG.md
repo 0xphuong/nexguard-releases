@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.5] - 2026-07-17
+
+Auto-reconnect on wake. When macOS wakes from sleep, NexGuard
+Connect no longer leaves the user staring at a disconnected VPN --
+it re-establishes the tunnel automatically if the user was
+Connected before sleep.
+
+### Added
+
+- **Sticky reconnect intent + wake auto-reconnect.** New in-memory
+  `reconnectIntent` flag is armed when the user explicitly clicks
+  Connect, cleared on Disconnect / Sign Out / switch organization.
+  `handleWillSleep` still tears the tunnel down while awake (so the
+  scutil DNS cleanup fires before the process is suspended) but no
+  longer leaves the state at `.connected` -- it now sets
+  `.enrolled` so the wake path knows to reconnect. `handleDidWake`
+  checks the intent + state; if intent=true and disconnected, kicks
+  a retry loop.
+- **Network-aware backoff.** Instead of blindly retrying on a
+  fixed schedule (2/5/15/30 s), each iteration first waits for
+  `NWPathMonitor` to report `.satisfied` -- if the delay expires
+  without a usable network path, the iteration is a SKIP (no
+  wasted `wg-quick up` call). This prevents the state briefly
+  flipping to `.connected` against an offline machine while Wi-Fi
+  reassociates. Total wall-clock budget is ~52 s (sum of the four
+  delays); after that the state resolves to `.enrolled` and a
+  notification tells the user to click Connect if they still
+  want it.
+- **Intent-honouring cancellation.** Any explicit user action
+  during the retry window (Connect, Disconnect, Sign Out, switch
+  org, session-expired forceReSignIn) cancels the retry task
+  cleanly so we never fight the user.
+
+### Notes
+
+- Intent is in-memory only. App restart (crash-relaunch, quit +
+  reopen, Mac shutdown + reboot) does NOT auto-connect -- user
+  clicks Connect once, then sleep/wake stays connected. Rationale:
+  persisting the flag would auto-reconnect after crashes the user
+  didn't ask to recover from; the current design keeps the mental
+  model simple ("when you're actively signed in + connected, sleep
+  doesn't break that").
+- If the session expires DURING sleep (server enforces
+  `vpn_session_duration`), the OAuth refresh call at wake returns
+  401 → forceReSignIn fires → sticky intent cleared → user sees
+  the Sign In screen. Same "not authenticated" notification as
+  other session-expired paths -- not a regression.
+- Auto-reconnect requires reachable network. If the user wakes on
+  a plane / in an elevator / with Wi-Fi off, the retry loop
+  correctly skips its iterations and gives up after ~52 s with a
+  "click Connect to retry" notification. No wasted wg-quick calls
+  against nothing.
+
+---
+
 ## [0.5.4] - 2026-07-17
 
 DNS strategy shift: no more zombie DNS after unclean exits + reboot.
