@@ -9,6 +9,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.7] - 2026-07-20
+
+Instant session-expiry detection + can't-miss popup alert. Fixes
+the "app shows Connected but tunnel is dead + only surfaces the
+notification when the user clicks the menu bar icon" bug.
+
+### Fixed
+
+- **Session expiry now detected LOCALLY**, at the exact moment the
+  server considers the session dead. Requires NexGuard server
+  v3.2.2+ which introduces a new `session_expires_at` field in the
+  `/api/v1/native/token` + `/refresh` responses. On sign-in /
+  refresh the client:
+
+    1. Reads `session_expires_at` from the response.
+    2. Persists it in the per-server secret store (`Keychain.set`
+       with new `session_expires_at` key) so a crash-relaunch
+       still knows.
+    3. Schedules a local `Task.sleep`-based timer that fires
+       `forceReSignIn` at that exact wall-clock moment.
+
+  Bypasses the "tunnel-DNS-through-dead-tunnel" trap: when the
+  session expires and the server drops the WG peer, any HTTP call
+  from the client would `URLError` out (DNS unreachable via dead
+  tunnel), so the 401 that would normally trigger `forceReSignIn`
+  never surfaces. The local timer doesn't care -- it's clock-based,
+  not network-based.
+
+- **Modal `NSAlert` popup** at the moment of expiry, on top of
+  the pre-existing background `UNUserNotificationCenter` banner.
+  The UN banner is easy to miss (Do Not Disturb, full-screen apps,
+  just not looking); the NSAlert brings the app to the foreground
+  (temporary `.regular` activation policy, dock icon briefly
+  visible) and blocks with a modal the user has to click "OK" on.
+
+  Three redundant channels now surface a session expiry:
+    * NSAlert modal (new, can't miss)
+    * UN system notification banner (pre-existing)
+    * In-app error banner "Session expired -- please sign in
+      again" in the tray popover (pre-existing)
+
+### Fallback paths (server pre-3.2.2)
+
+If the server doesn't emit `session_expires_at` yet, the client
+decodes it as `nil` and skips the local timer -- falling back to
+the existing detection paths that ship with earlier versions:
+
+  * v0.5.6 degraded-tunnel probe -- ~2m45s after peer removal
+  * Scheduled token-refresh timer -- up to ~55 min
+  * User clicking the menu bar icon -- instant (bootstrap
+    re-runs `refreshDeviceStatus` which surfaces the 401)
+
+No breakage on downgrade to a pre-3.2.2 server. Upgrade the server
+first to unlock the new instant-detection path.
+
+### Notes
+
+- Detection latency for a server-side session expiry drops from
+  "up to ~55 min" (worst case, pre-v0.5.6) or "~2m45s"
+  (v0.5.6's degraded-tunnel probe) to **~0 seconds**
+  (v0.5.7 with server v3.2.2). Timer fires exactly when the
+  session expires.
+- No new server endpoints, no new admin UI surface, no schema
+  migration. One JSON field added to two existing endpoints.
+
+---
+
 ## [0.5.5] - 2026-07-17
 
 Auto-reconnect on wake. When macOS wakes from sleep, NexGuard

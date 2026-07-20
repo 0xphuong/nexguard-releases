@@ -2,12 +2,12 @@
   "schema_version": 1,
   "products": {
     "nexguard-connect-macos": {
-      "latest": "0.5.5",
+      "latest": "0.5.7",
       "minimum": "0.0.5",
-      "released_at": "2026-07-17",
-      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuard-Connect-0.5.5.dmg",
-      "sha256": "32eec28b366d6d98208be12629efe3aa80377ef0c1f0729f69666d400f6aa50b",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#055---2026-07-17"
+      "released_at": "2026-07-20",
+      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuard-Connect-0.5.7.dmg",
+      "sha256": "674dc825873a34ca2e5f64c592155eb3403d206f7f1812d4110fc3ba38b2284c",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#057---2026-07-20"
     },
     "nexguard-connect-windows": {
       "latest": "0.5.1",
@@ -26,11 +26,11 @@
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-linux-cli/CHANGELOG.md#030---2026-07-13"
     },
     "nexguard-server": {
-      "latest": "3.2.0",
+      "latest": "3.2.2",
       "minimum": "3.0.0",
-      "released_at": "2026-07-13",
-      "download_url": "https://github.com/0xphuong/nexguard/releases/tag/v3.2.0",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#320---2026-07-13"
+      "released_at": "2026-07-20",
+      "download_url": "https://github.com/0xphuong/NexGuard/releases/tag/v3.2.2",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/server/CHANGELOG.md#322---2026-07-20"
     }
   }
 }

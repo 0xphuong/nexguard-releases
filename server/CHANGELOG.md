@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.2] - 2026-07-20
+
+Additive: native auth token responses now include
+`session_expires_at` so native clients (macOS v0.5.7+) can detect
+session expiry LOCALLY, without needing a live server call. Critical
+when the tunnel is dead but the client still needs to sign the user
+out cleanly (tunnel-DNS unreachable = any HTTP call to the server
+URLErrors out, so the 401 that would normally trigger `forceReSignIn`
+never surfaces).
+
+Response JSON on `/api/v1/native/token` + `/api/v1/native/refresh`:
+
+    "session_expires_at": "2026-07-21T05:00:16.497725Z"
+
+ISO 8601 UTC timestamp = `user.last_signed_in_at + vpn_session_duration`.
+Null when the org disabled session-based expiry, or when
+`last_signed_in_at` is nil. Client's local expiry timer skips when
+nil (fallback to existing paths: degraded-tunnel probe, refresh
+timer 401, explicit user reconnect).
+
+Zero DB migration; JSON-shape change only. Backward compatible --
+older clients ignore the field.
+
+---
+
+## [3.2.1] - 2026-07-16
+
+Silence `TLS handshake error from 127.0.0.1: EOF` log noise on
+`nexguard-proxy`. Phoenix's HealthMonitor now probes the proxy's
+plaintext observability port (`/readyz` on :9090) instead of the
+TLS transparent listener (:8443). Improves signal quality --
+`/readyz` returns 503 during bundle bootstrap + SIGTERM drain,
+which the old TCP-connect probe missed.
+
+Single-file change (`apps/fz_http/lib/fz_http/health_monitor.ex`).
+No breaking changes.
+
+---
+
 ## [3.2.0] - 2026-07-13
 
 Additive telemetry release. One migration extends `devices` with
