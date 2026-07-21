@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.8] - 2026-07-21
+
+Heads-up "session will expire in ~10 minutes" notification + fixes
+the session-expired NSAlert popup that was rendering BEHIND other
+apps' active window on LSUIElement (menu-bar-only) builds.
+
+### Added
+
+- **Pre-expiry heads-up notification (10 min before)**. When the
+  server-provided `session_expires_at` is within ~10 min, the client
+  fires a UN notification banner + in-app tray banner:
+  > "VPN session will expire in ~10 minutes. Reconnect when
+  > convenient to avoid interruption."
+
+  Fires while the tunnel is still healthy, so the notification
+  actually surfaces (no dead-tunnel-DNS blackhole). Gives the user
+  time to save work, plan a reconnect, or finish a call before the
+  tunnel drops. Advisory only — no NSAlert modal, no forced sign-out.
+
+- **Periodic 10-min session health-check loop**. Runs while Connected.
+  Backfills `session_expires_at` from the server ONLY when memory
+  is nil (edge cases: upgrade from pre-v0.5.7 without expiry stored,
+  corrupted Keychain, pre-3.2.2 server sign-in cached). Silent no-op
+  otherwise — no redundant API calls when the value is already known.
+
+### Fixed
+
+- **Session-expired NSAlert popup now floats on top of every app**.
+  v0.5.7 wired the alert but LSUIElement (menu-bar) activation
+  didn't flush through the run loop before `runModal()` blocked,
+  so the alert would render BEHIND whatever app the user was
+  currently focused on -- easy to miss entirely. Fix: set
+  `alert.window.level = .modalPanel` +
+  `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`
+  + explicit `orderFrontRegardless()` BEFORE `runModal()`, matching
+  the "About NexGuard Connect" panel dance. Alert now steals focus
+  from active apps and reads as urgent.
+
+### Detection latency (all layers together, natural expiry)
+
+| Layer | When |
+|---|---|
+| Heads-up warning (v0.5.8) | T - 10 min |
+| Exact-moment sign-out (v0.5.7) | T |
+| Health-check backfill (edge: memory nil) | ≤ 10 min |
+| Degraded-tunnel probe (v0.5.6) | ~2m45s after tunnel dies |
+| Scheduled refresh (baseline) | ≤ 55 min |
+
+Compatible with any NexGuard server version. When talking to a
+pre-3.2.2 server that doesn't return `session_expires_at`, the
+warning + exact-moment timers are silently skipped and detection
+falls back to the v0.5.6 degraded-probe + refresh-timer paths.
+
+---
+
 ## [0.5.7] - 2026-07-20
 
 Instant session-expiry detection + can't-miss popup alert. Fixes
