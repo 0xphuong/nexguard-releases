@@ -9,6 +9,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - 2026-07-21
+
+Full parity with macOS v0.5.7 + v0.5.8 session-expiry detection.
+The user now gets a 10-minute heads-up notification BEFORE the VPN
+session expires, and the client cuts them back to Sign In at the
+exact moment the session dies -- without needing to reach the server
+first.
+
+### Added
+
+- **`session_expires_at` parsed + persisted (parity with macOS
+  v0.5.7).** Server v3.2.2+ emits this ISO 8601 UTC field in
+  `/api/v1/native/token` + `/refresh` responses. Windows client
+  now reads it, persists it under a new `SecretKey.SessionExpiresAt`
+  (DPAPI-wrapped alongside the refresh token), and rehydrates it
+  lazily on process restart.
+
+- **Exact-moment session-expiry timer.** Single-shot `Task.Delay`
+  fires at the wall-clock `session_expires_at` moment. On fire,
+  cancels every session task, clears the DPAPI blob, fires the
+  Windows toast, and flips `Phase = Revoked`. Works without a
+  server round-trip -- critical when the tunnel is dead and any
+  HTTP call would just URLError through the now-unreachable
+  tunnel-DNS.
+
+- **Pre-expiry heads-up notification (10 min before, parity with
+  macOS v0.5.8).** UN toast + in-app `InfoBanner` update while the
+  tunnel is still healthy. Advisory only -- no forced sign-out,
+  no tunnel drop. The user has 10 minutes to save work, finish a
+  call, or reconnect on their own schedule.
+
+- **Periodic 10-min session-health safety-net loop.** Runs while
+  Connected. Silent no-op each tick when `SessionExpiresAt` is
+  present in memory; only pings the server when memory is null --
+  covers the upgrade edge case where tokens survived from a
+  pre-v0.6.0 install but no `session_expires_at` blob was written.
+
+### Changed
+
+- **`SessionExpired` + `SessionExpiringSoon` toasts now use
+  `ToastScenario.Reminder`** so they persist in Action Center until
+  the user explicitly dismisses them, instead of fading after ~5
+  seconds. Windows Toast is already prominent enough that no
+  separate `NSAlert`-style modal is needed (the macOS v0.5.8
+  "float on top of other apps" fix has no Windows equivalent).
+
+### Compatibility
+
+- **NexGuard server v3.2.2+ required for the new features.** Older
+  servers omit `session_expires_at`, in which case
+  `TokenResponse.SessionExpiresAt` deserialises to `null`, the two
+  expiry timers silently skip, and detection falls back to the
+  existing paths (5-min-before-access-token-expiry proactive refresh
+  + 401 handling on any authenticated call).
+
+- **No changes to the WireGuard tunnel service, WebView2 sign-in
+  flow, or DPAPI store format.** Existing users upgrade in place;
+  their refresh tokens keep working. The first proactive refresh
+  after upgrade populates `session_expires_at`.
+
+Update: `NexGuardConnect.msi` (~67 MB), SHA-256
+`91f613ab721a5ca420f6b7c2a4b6f32667a52fa2ffa51af0efff36fd19e824b8`.
+Silent auto-update from 0.5.1 in-place (existing MSI upgrade rule
+in the installer).
+
+---
+
 ## [0.5.1] - 2026-07-16
 
 Internal DNS through the tunnel now survives Disconnect + Reconnect.
