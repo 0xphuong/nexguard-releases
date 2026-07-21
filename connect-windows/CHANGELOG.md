@@ -9,6 +9,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.1] - 2026-07-21
+
+Fixes the "status shows Connected but VPN doesn't work" bug that
+survived v0.6.0. Root cause was deeper than the session-expiry
+timer: the tunnel stats code was **faking the handshake time**,
+so the app couldn't tell a live tunnel apart from a dead-peer
+tunnel to begin with.
+
+### Fixed
+
+- **Fake handshake removed.** Prior versions synthesized
+  `LastHandshake = now` whenever the wintun adapter was Up, but
+  WireGuardNT brings the adapter Up **as soon as the LOCAL setup
+  finishes** -- well before the initiation handshake succeeds
+  with the peer. Consequences under v0.6.0: a server-dropped
+  peer still computed `HandshakeHealth = Healthy` forever; every
+  Connect returned success within 1s regardless of whether the
+  peer had responded; and the "adopt leftover" catch adopted the
+  dead tunnel and pinned `Phase = Connected` permanently. Fixed
+  by tracking real `IPStatistics.BytesReceived` growth as the
+  handshake proxy: `LastHandshake` is only advanced when the
+  received-byte counter actually increases across polls. A live
+  peer bumps it within 1-2s; a dropped peer never does, so
+  `WaitForFirstHandshakeAsync` times out honestly at 15s and
+  Connect aborts with an actionable error.
+
+- **`HandshakeHealth.Compute(null, ...)` now returns `Degraded`,
+  not `Healthy`.** Under the new tracker, `null` means "no bytes
+  received on the tunnel" -- during `Phase = Connected` that's
+  exactly the "peer stopped responding" signal.
+
+- **Removed the "adopt leftover on Connect exception" fallback.**
+  It was masking the exact bug: a mid-Connect exception found the
+  freshly-installed WG service still running and flipped Phase
+  back to `Connected` with `Degraded` health, hiding the real
+  failure. Now: any Connect exception tears the tunnel down and
+  lands the user on `Enrolled` with the actual error message.
+  (Cold-start Bootstrap's leftover-adoption is preserved.)
+
+- **Handshake-timeout branch verifies session status.** When
+  `WaitForFirstHandshakeAsync` returns null, the app issues an
+  explicit token refresh before falling back to a generic
+  "unreachable" message. If the refresh returns 401
+  `session_expired`, the user routes through `ForceReSignInAsync`
+  (Sign In screen + toast + Action Center notification) instead
+  of staring at a misleading "server unreachable" on `Enrolled`.
+
+### Changed
+
+- **Session-health loop refreshes on EVERY tick.** v0.6.0 skipped
+  the refresh whenever the client had a cached `session_expires_at`.
+  That left a ~55-minute detection window whenever the server-side
+  expiry changed after the last save (SQL rollback for testing,
+  admin force-expire in production). Now every 10-minute tick
+  pulls fresh `session_expires_at`; a 401 during refresh routes
+  through `ForceReSignInAsync` immediately.
+
+### Detection latency (post-fix)
+
+| Scenario | Latency |
+|---|---|
+| Natural expiry | 0s -- local timer fires exactly |
+| Server-side expiry change (SQL / admin) | ≤ 10 min via health-check |
+| Connect against dead peer | ~15s -- explicit session check after handshake timeout |
+
+Update: `NexGuardConnect.msi` (~67 MB), SHA-256
+`5954304ab02b42acb86c15ad1adcbe4f54b144ab19361658e41e9862076864a5`.
+In-place MSI upgrade from 0.6.0.
+
+---
+
 ## [0.6.0] - 2026-07-21
 
 Full parity with macOS v0.5.7 + v0.5.8 session-expiry detection.
