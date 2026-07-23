@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.3] - 2026-07-21
+
+Fixes the "Windows A + Windows B collision" bug: two devices
+enrolled by the same user used to fight over the tunnel because
+`GET /api/v1/devices/me/config` always returned the
+most-recently-enrolled row, ignoring which client was actually
+asking. Whichever device signed in most recently hijacked the
+other's config; the older device then couldn't reconnect
+without pulling the newer's IP down (breaking WG routing for
+both).
+
+### Fixed
+
+- **`GET /api/v1/devices/me/config` accepts optional
+  `?device_id=<uuid>` query param.** Present: return that
+  specific device, verify user ownership (403 `device_not_owned`
+  if not). Absent: preserve pre-v3.2.3 "most-recent" behavior
+  for backward compat with older clients.
+
+- New `FzHttp.Devices.fetch_for_user_by_id/2` context helper
+  with clean not-found / forbidden semantics.
+
+### Client rollout required
+
+Windows / macOS / Linux CLI clients each need a small matching
+change to append `?device_id=<stored-uuid>` when calling
+`me_config`. The `device_id` is already returned by
+`/api/v1/devices/enroll` and persisted in every client's secure
+store; just needs to be sent on the config fetch. Client
+releases to follow.
+
+### Compatibility
+
+- Pre-v3.2.3 clients (don't send `device_id`): no behavior
+  change.
+- v3.2.3+ clients: send `device_id` and always get the right
+  device, no more collisions between Windows A + B or Mac +
+  Windows on the same user.
+
+---
+
 ## [3.2.2] - 2026-07-20
 
 Additive: native auth token responses now include
