@@ -69,7 +69,7 @@ Downloads `NexGuardConnect-<ver>.msi`, verifies SHA-256, installs per-machine vi
 
 | Product | Latest | Minimum | Source repo |
 |---|---|---|---|
-| NexGuard Connect (macOS) | `0.5.8` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
+| NexGuard Connect (macOS) | `0.5.9` | `0.0.5` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Connect (Windows) | `0.6.2` | `0.1.0` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Connect (Linux CLI) | `0.3.0` | `0.1.7` | [nexguard-connect](https://github.com/0xphuong/nexguard-connect) |
 | NexGuard Server | `3.2.3` | `3.0.0` | [NexGuard](https://github.com/0xphuong/NexGuard) |

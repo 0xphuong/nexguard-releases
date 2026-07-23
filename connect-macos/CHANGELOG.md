@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.9] - 2026-07-23
+
+Pairs with NexGuard server v3.2.3. Fixes the "multi-device
+collision" where a user with multiple enrolled devices (this Mac
++ another Mac, or this Mac + a Windows client) could see the
+wrong device's status / config surface in this app -- the server
+was returning the most-recently-enrolled device row on every
+`me_config` call regardless of who was actually asking.
+
+### Fixed
+
+- **`NexGuardAPI.getDeviceConfig(deviceId:)` now accepts an
+  optional `deviceId` argument** and appends it as
+  `?device_id=<uuid>` to `/api/v1/devices/me/config`. Wired at
+  the single caller (`refreshDeviceStatus`) with the value from
+  `Keychain.deviceId` -- persisted since first enroll, so the
+  fix takes effect on the very next status refresh after
+  upgrade. Server v3.2.3+ uses the id to return this Mac's
+  specific row; older servers silently ignore the extra query
+  param and take the pre-v3.2.3 fallback path.
+
+- **`NexGuardAPI` internal URL builder now handles query
+  strings correctly.** Previously the code path used
+  `URL.appendingPathComponent(_:)`, which percent-encodes `?`
+  and would have broken any query parameter. Added a private
+  `url(for:)` helper that splits path + query and rebuilds via
+  `URLComponents`, so future callers can pass
+  `"path?key=value"` safely.
+
+### Compatibility
+
+- **Server v3.2.3+ recommended.** Against v3.2.2 or earlier
+  this client behaves identically to v0.5.8 -- the extra query
+  param is a no-op and multi-device users keep hitting the
+  collision on the server side until the server upgrades.
+- No Keychain schema change. No tunnel / entitlement / signing
+  change. In-place update from v0.5.8.
+
+Update: `NexGuard-Connect-0.5.9.dmg` (~6 MB), SHA-256
+`078b5ea282cd6000f9d972b0cb0723b11ff85bc4e9bb3ed944a0f7beb965a91a`.
+
+---
+
 ## [0.5.8] - 2026-07-21
 
 Heads-up "session will expire in ~10 minutes" notification + fixes

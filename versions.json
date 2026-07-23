@@ -2,12 +2,12 @@
   "schema_version": 1,
   "products": {
     "nexguard-connect-macos": {
-      "latest": "0.5.8",
+      "latest": "0.5.9",
       "minimum": "0.0.5",
-      "released_at": "2026-07-21",
-      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuard-Connect-0.5.8.dmg",
-      "sha256": "a6121b0456c9c28aee6b57a7e796e41511436a2bc57c3094a7849f9659f6b0a3",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#058---2026-07-21"
+      "released_at": "2026-07-23",
+      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/NexGuard-Connect-0.5.9.dmg",
+      "sha256": "078b5ea282cd6000f9d972b0cb0723b11ff85bc4e9bb3ed944a0f7beb965a91a",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-macos/CHANGELOG.md#059---2026-07-23"
     },
     "nexguard-connect-windows": {
       "latest": "0.6.2",
