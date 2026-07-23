@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.2] - 2026-07-21
+
+Pairs with NexGuard server v3.2.3. Fixes the "Windows A + Windows B
+collision" where the second-signed-in device hijacked the first's
+tunnel config on every reconnect (both devices ended up with the
+same IP + peer allowed-ips, and WG routing broke for whichever
+device wasn't the most-recent to enroll).
+
+### Fixed
+
+- **`GetDeviceConfigAsync` now sends the stored `device_id` as a
+  `?device_id=<uuid>` query parameter** on every call. Before, all
+  three callers (bootstrap silent-refresh check, ConnectAsync
+  pre-connect refresh, periodic RefreshDeviceStatusAsync poll)
+  hit the bare `me_config` endpoint, which returned the
+  most-recently-enrolled device row regardless of who was asking.
+  The `device_id` is already returned by
+  `/api/v1/devices/enroll` and persisted under `SecretKey.DeviceId`
+  in the DPAPI store; this release just starts sending it. Server
+  v3.2.3+ uses it to return the specific row; older servers ignore
+  the query param and fall back to their pre-v3.2.3 behavior.
+
+### Compatibility
+
+- **Server v3.2.3+ recommended.** Against v3.2.2 or earlier the
+  client behaves identically to v0.6.1 -- the extra query param
+  is a no-op, so multi-device users on old servers keep hitting
+  the collision until the server upgrades.
+- No secure-store schema change. No wintun / service change.
+  In-place MSI upgrade from 0.6.0 / 0.6.1.
+
+Update: `NexGuardConnect.msi` (~67 MB), SHA-256
+`c8904fb0d0fea7b999c9b8159bbff0b0eb0558fca4a74edc7642b2ea2a0b198e`.
+
+---
+
 ## [0.6.1] - 2026-07-21
 
 Fixes the "status shows Connected but VPN doesn't work" bug that
