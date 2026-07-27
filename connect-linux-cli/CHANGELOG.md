@@ -7,6 +7,65 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.3.1] - 2026-07-27
+
+Fixes the "restart the machine and Connect fails with Session
+expired" bug and lands the session-expiry foundation (pairs
+with server v3.2.2+).
+
+### Fixed
+
+- **`refresh_token` is now actually used at Connect time.** The
+  0.3.0 CLI persisted `refresh_token` on sign-in but only ever
+  read it back for the sign-out revoke path; every Connect
+  loaded the (short-lived, ~1h TTL) `access_token` directly and
+  exited "Session expired — run: nexguard sign-in" whenever the
+  JWT had timed out — which happened on every reboot. New
+  `ensure_access_token` helper rotates through `refresh_token`
+  via `api::refresh` before any authenticated request, persists
+  the new pair, and returns the fresh access token. Only
+  escalates to "sign in again" when the SERVER rejects the
+  refresh.
+
+- **TUI "signed in" state derives from `TokenKind::Refresh`,
+  not `Access`.** The old check flipped the header pill to
+  `NOT SIGNED IN` after a reboot even though the refresh token
+  in `tokens.json` was still valid.
+
+### Added (M1 -- session-expiry foundation)
+
+- **Parse + persist `session_expires_at`** from server v3.2.2+
+  token responses (ISO 8601 UTC). New `TokenKind::SessionExpiresAt`
+  variant + `Entry.session_expires_at` in `tokens.json`.
+
+- **`nexguard status` shows the session countdown**:
+
+      Session: expires in 4h 12m 03s (2026-07-24T02:07:11Z)
+
+  Silent skip when the server didn't provide `session_expires_at`
+  (org disabled expiry, pre-v3.2.2 server, fresh install before
+  first refresh).
+
+- **`nexguard status` exits `6` when the session is past its
+  expiry** -- scriptable one-liner for monitoring:
+
+      nexguard status || echo "please sign in"
+
+### Compatibility
+
+- **Server v3.2.2+ recommended** for the session countdown to
+  appear. Older servers omit the field; this build silently
+  falls back to no-countdown.
+- **No `tokens.json` schema break.** The new field is
+  `#[serde(default)]` -- a 0.3.0 install upgraded in place
+  reads its old `tokens.json` cleanly.
+- **First user-visible action after upgrade** rotates the
+  refresh token silently -- no browser flow needed unless the
+  server-side session has actually expired.
+
+Update: `nexguard-connect_0.3.1_amd64.deb` (~2.3 MB), SHA-256
+`211d0222bde82b893f55fa05ad2c3e3d01e834b397b4d88b9d558d832e978212`.
+
 ## [0.3.0] - 2026-07-13
 
 Additive telemetry release — pairs with NexGuard server 3.2.0.

@@ -18,12 +18,12 @@
       "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-windows/CHANGELOG.md#062---2026-07-21"
     },
     "nexguard-connect-linux-cli": {
-      "latest": "0.3.0",
+      "latest": "0.3.1",
       "minimum": "0.1.7",
-      "released_at": "2026-07-13",
-      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/nexguard-connect_0.3.0_amd64.deb",
-      "sha256": "47940c750f40462b1fa916502518ecb0f58664f4a740b97fce1d7b08a4807599",
-      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-linux-cli/CHANGELOG.md#030---2026-07-13"
+      "released_at": "2026-07-27",
+      "download_url": "https://711-nexguard-connect.s3-ap-southeast-1.amazonaws.com/nexguard-connect_0.3.1_amd64.deb",
+      "sha256": "211d0222bde82b893f55fa05ad2c3e3d01e834b397b4d88b9d558d832e978212",
+      "changelog_url": "https://github.com/0xphuong/nexguard-releases/blob/main/connect-linux-cli/CHANGELOG.md#031---2026-07-27"
     },
     "nexguard-server": {
       "latest": "3.2.3",
