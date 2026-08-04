@@ -7,6 +7,41 @@ Tag prefix: `linux-cli-vX.Y.Z`. Manifest product id:
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 SemVer: features = MINOR, bug fixes = PATCH.
 
+## [0.3.2] - 2026-08-04
+
+Fix-only release. Makes the .deb install cleanly on **Ubuntu
+26.04 LTS "resolute"** (previously failed with an unresolvable
+`policykit-1 | polkit` dependency — Ubuntu 26.04 removed both
+packages, splitting `pkexec` off into its own package).
+
+### Fixed
+
+- **Install on Ubuntu 26.04 aborts with "Package policykit-1
+  is not installed. Package polkit is not installed."**
+  The .deb's `Depends:` field listed only the two legacy
+  package names. Ubuntu 26.04 dropped `policykit-1` (was a
+  transitional wrapper) and `polkit` entirely; `pkexec`
+  ships as its own package now. Fix adds `pkexec` as the
+  first alternative:
+  ```
+  Depends: ..., pkexec | policykit-1 | polkit, systemd
+  ```
+  dpkg's alternative resolver skips unknown alternatives, so
+  the same .deb still satisfies Ubuntu 18.04 → 24.04 (which
+  don't ship a standalone `pkexec` package — falls through
+  to `policykit-1` or `polkit`). Verified on Ubuntu 20.04
+  (build box) and Ubuntu 26.04 (report host).
+
+### Compatibility
+
+- No client behaviour change. `pkexec` binary path is the same
+  under `/usr/bin/pkexec` on every LTS; only the package
+  metadata declaring where it comes from moves.
+- Pairs with server v3.2.2+ (unchanged; session-expiry
+  contract same as v0.3.1).
+
+---
+
 ## [0.3.1] - 2026-07-27
 
 Fixes the "restart the machine and Connect fails with Session
