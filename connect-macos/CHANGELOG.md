@@ -9,6 +9,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.10] - 2026-08-04
+
+Fixes the "app shows Ready even though device is pending" bug that
+appeared on macOS 15.7.7 (Sequoia) but not on the maintainer's macOS
+26 build box. Same code — race condition unmasked by older macOS's
+URLSession scheduling.
+
+Also lands a bootstrap-time `.verifying` safeguard: on relaunch the
+app can no longer flash a fake "Ready" screen while the server round
+trip that confirms device approval is still in flight. Users on
+macOS 15 who reported clicking Connect against an unrouted tunnel
+(local wg-quick brings the interface up, server firewall drops all
+traffic → UI reads "Connected" but nothing works) should stop
+seeing this.
+
+### Fixed
+
+- **`bindServer(_:)` is now idempotent**. Every `MenuBarExtra`
+  popover appearance fires `.task` → `bootstrap()` → `bindServer()`;
+  the previous unconditional `tokenStore = TokenStore(server: s)`
+  allocation wiped the in-memory `accessToken` on every popover
+  open. TokenStore only persists the `refresh_token` to disk;
+  `accessToken` is memory-only. After the wipe, `refreshDeviceStatus()`
+  raced `refreshTokens()` — on macOS 15 the API call almost always
+  won the race, threw `APIError.notAuthenticated`, and the
+  `.verifying` safeguard fell through to (previously) `.enrolled`
+  ("don't trap the user"). Now we early-return when `currentServer`
+  hasn't changed; the same TokenStore + OAuthClient + API instances
+  survive across bootstraps. macOS 26 got lucky on this race by
+  scheduling `refreshTokens()` first; macOS 15 lost by ~50 ms.
+
+- **`.verifying → error` no longer falls through to `.enrolled`**.
+  The pre-fix behaviour was pragmatic ("show Ready so the user can
+  retry") but leaked the fake-Ready state that made the bug possible
+  in the first place. We now fall to `.pendingApproval` on any
+  refresh error while verifying — the safer default. If the device
+  is approved, the user's next Check Status (or the background poll)
+  will flip it to `.enrolled` cleanly. If it's pending, they see the
+  correct screen instead of clicking Connect against an unrouted
+  tunnel.
+
+- **`enrollDevice()` no longer caches wg-config to disk when the
+  server returned `status: "pending"`**. The v0.5.5-and-earlier
+  behaviour wrote the config regardless, so a relaunch's cached-
+  config check made `bootstrap()` skip verification and jump
+  straight to `.enrolled`. Cache now lands on the disk only inside
+  the `("approved", .pendingApproval)` transition of
+  `refreshDeviceStatus()`. Companion write happens on the
+  `("pending", .enrolled)` revoked-by-admin path — clears the
+  cache so the next bootstrap doesn't re-enroll to Ready.
+
+### Added
+
+- **`.verifying` connection state** in the state machine. Bootstrap
+  seeds this state whenever `currentConfig != nil` at launch;
+  `refreshDeviceStatus()` promotes it to `.enrolled` (approved)
+  or `.pendingApproval` (pending / error). UI reuses the
+  `AuthenticatingView` spinner with a "Checking status..." title
+  and a "Confirming this device is still approved on the server"
+  subtitle. Connect button is unreachable in this state.
+
+- **`DebugTrace` opt-in file logger** (`AppState.DebugTrace`).
+  Gated behind `~/.nexguard-debug` existing — zero cost when
+  disabled. Writes state transitions + bootstrap decisions to
+  `~/Library/Logs/NexGuardConnect-debug.log`. Kept in the binary
+  for future field debugging (dropping a `touch ~/.nexguard-debug`
+  on a user's machine + reproducing the bug produces a
+  timestamp-per-transition log that made the bindServer race
+  diagnosable in ~10 minutes).
+
+### Compatibility
+
+- Ad-hoc signed DMG (Apple Developer Program not yet purchased).
+  Install via install.sh handles quarantine strip; manual drag-and-
+  drop users need `xattr -cr /Applications/NexGuardConnect.app`.
+- No client-server protocol change. Same endpoints as v0.5.9. Pairs
+  with NexGuard server v3.2.3+ (device_id param on `/me/config`).
+
+---
+
 ## [0.5.9] - 2026-07-23
 
 Pairs with NexGuard server v3.2.3. Fixes the "multi-device
